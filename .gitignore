@@ -1,0 +1,6 @@
+CONTEXT.md
+.env
+api/node_modules
+api/.env
+infrastructure/.env
+api/dist
