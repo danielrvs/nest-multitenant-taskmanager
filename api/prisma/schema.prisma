@@ -31,7 +31,7 @@ enum TaskPriority {
 }
 
 model Tenant {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
   name      String   @db.VarChar(255)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -43,51 +43,81 @@ model Tenant {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
-  tenantId    Int      @map("tenant_id")
-  name        String   @db.VarChar(255)
-  email       String   @unique @db.VarChar(255)
-  password    String   @db.VarChar(255)
-  role        UserRole @default(VIEWER)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  name      String   @db.VarChar(255)
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  role      UserRole @default(VIEWER)
+  mfaSecret String? @db.Text @map("mfa_secret")
+  mfaRecoveryCodes String? @db.Text @map("mfa_recovery_codes")
+  mfaFactorConfirmedAt DateTime? @map("mfa_factor_confirmed_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  createdTasks   Task[]   @relation("CreatedTasks")
-  assignedTasks  Task[]   @relation("AssignedTasks")
-  taskAudits     TaskAudit[]
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdTasks  Task[]         @relation("CreatedTasks")
+  assignedTasks Task[]         @relation("AssignedTasks")
+  taskAudits    TaskAudit[]
+  refreshTokens RefreshToken[]
 
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([email])
   @@map("users")
 }
 
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+
 model Task {
-  id          Int          @id @default(autoincrement())
-  tenantId    Int          @map("tenant_id")
-  userId      Int          @map("user_id")
+  id          String       @id @default(cuid())
+  tenantId    String       @map("tenant_id")
+  userId      String       @map("user_id")
   title       String       @db.VarChar(255)
   description String?      @db.Text
   status      TaskStatus   @default(PENDING)
   priority    TaskPriority @default(MEDIUM)
   dueDate     DateTime?    @map("due_date")
-  assignedTo  Int?         @map("assigned_to")
+  assignedTo  String?      @map("assigned_to")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
 
-  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  creator     User         @relation("CreatedTasks", fields: [userId], references: [id], onDelete: Cascade)
-  assignee    User?        @relation("AssignedTasks", fields: [assignedTo], references: [id], onDelete: SetNull)
-  audits      TaskAudit[]
+  tenant   Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  creator  User        @relation("CreatedTasks", fields: [userId], references: [id], onDelete: Cascade)
+  assignee User?       @relation("AssignedTasks", fields: [assignedTo], references: [id], onDelete: SetNull)
+  audits   TaskAudit[]
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([assignedTo])
+  @@index([status])
+  @@index([priority])
 
   @@map("tasks")
 }
 
 model TaskAudit {
-  id        Int      @id @default(autoincrement())
-  taskId    Int      @map("task_id")
-  userId    Int      @map("user_id")
+  id        String   @id @default(cuid())
+  taskId    String   @map("task_id")
+  userId    String   @map("user_id")
   action    String   @db.VarChar(120)
   createdAt DateTime @default(now()) @map("created_at")
 
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("task_audits")
 }
