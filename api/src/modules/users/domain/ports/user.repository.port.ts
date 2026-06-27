@@ -8,4 +8,6 @@ export abstract class UserRepositoryPort implements IsFactoryRepository<User> {
     abstract update(id: string, data: Partial<User>): Promise<User>;
     abstract delete(id: string): Promise<void>;
     abstract findByTenantId(tenantId: string): Promise<User[]>;
+    abstract findRandomByTenantId(tenantId: string): Promise<User | null>;
+    abstract findRandomByTenantIdWhereIdNotIn(tenantId: string, excludeIds: string[]): Promise<User | null>;
 }

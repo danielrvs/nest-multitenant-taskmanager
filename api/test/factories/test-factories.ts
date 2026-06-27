@@ -1,4 +1,10 @@
+import { TaskRepositoryPort } from "@/modules/tasks/domain/ports/task.repository.port";
+import { TenantRepositoryPort } from "@/modules/tenants/domain/ports/tenant.repository.port";
+import { UserRepositoryPort } from "@/modules/users/domain/ports/user.repository.port";
 import { INestApplication } from "@nestjs/common";
+import { UserFactoryBuilder } from "./user/user.factory";
+import { TenantFactoryBuilder } from "./tenant/tenant.factory";
+import { TaskFactoryBuilder } from "./task/task.factory";
 
 export class TestFactories {
     private static app: INestApplication;
@@ -22,7 +28,7 @@ export class TestFactories {
             throw new Error('TestFactories not initialized');
         }
 
-        return new UserFactoryBuilder(this.userRepository, this.app.get(JwtService));
+        return new UserFactoryBuilder(this.userRepository, this.tenantRepository);
     }
 
     static tenant(): TenantFactoryBuilder {
@@ -38,6 +44,8 @@ export class TestFactories {
             throw new Error('TestFactories not initialized');
         }
 
-        return new TaskFactoryBuilder(this.taskRepository);
+        return new TaskFactoryBuilder(
+            this.taskRepository,
+            this.tenantRepository, this.userRepository);
     }
 }

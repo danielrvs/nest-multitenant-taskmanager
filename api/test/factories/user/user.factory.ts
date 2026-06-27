@@ -67,6 +67,9 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
             Email.create(def.email),
             password,
             def.role,
+            null,
+            null,
+            null,
             def.createdAt,
             def.updatedAt
         );
