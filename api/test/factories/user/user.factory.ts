@@ -18,6 +18,9 @@ export type UserStateOverride = {
     email?: string;
     password?: string;
     role?: UserRole;
+    mfaSecret?: string | null;
+    mfaRecoveryCodes?: string | null;
+    mfaFactorConfirmedAt?: Date | null;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -28,6 +31,9 @@ export type PrismaUserData = {
     name: string;
     email: string;
     role: PrismaUserRole;
+    mfaSecret: string | null;
+    mfaRecoveryCodes: string | null;
+    mfaFactorConfirmedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -51,6 +57,9 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
             email: faker.internet.email(),
             password: faker.internet.password(),
             role: faker.helpers.arrayElement([UserRole.ADMIN, UserRole.MANAGER, UserRole.VIEWER]),
+            mfaSecret: null,
+            mfaRecoveryCodes: null,
+            mfaFactorConfirmedAt: null,
             createdAt: new Date(),
             updatedAt: new Date(),
         }
@@ -73,6 +82,16 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
             def.createdAt,
             def.updatedAt
         );
+    }
+
+    public with2FA(): UserFactoryBuilder {
+        this.state({
+            mfaSecret: '123456',
+            mfaRecoveryCodes: '123456',
+            mfaFactorConfirmedAt: new Date(),
+        })
+
+        return this;
     }
 
 
