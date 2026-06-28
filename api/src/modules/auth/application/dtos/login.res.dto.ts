@@ -25,6 +25,7 @@ export class LoginResDto {
     @ApiProperty({
         example: {
             id: '123e4567-e89b-12d3-a456-426614174000',
+            tenantId: '123e4567-e89b-12d3-a456-426614174000',
             name: 'John Doe',
             email: 'user@example.com',
             role: 'ADMIN'
@@ -34,8 +35,18 @@ export class LoginResDto {
     })
     user: {
         id: string;
+        tenantId: string;
         name: string;
         email: string;
         role: string;
     };
+
+    @ApiProperty({
+        example: false,
+        description: 'Two factor authentication enabled',
+        required: true
+    })
+    twoFactorEnabled: boolean;
+
+
 }

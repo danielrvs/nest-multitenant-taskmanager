@@ -51,13 +51,16 @@ describe('Authentication Tests', () => {
 
     describe('POST /auth/login', () => {
         it('should successfully login with valid credentials when 2FA is disabled', async () => {
-            const user = await TestFactories.user().create();
+            const password = 'test-password';
+            const user = await TestFactories.user().state({
+                password
+            }).create();
 
             const response = await request(app.getHttpServer())
                 .post(route())
                 .send({
                     email: user.email.toString(),
-                    password: user.password.toString(),
+                    password,
                 });
 
             expect(response.status).toBe(200);

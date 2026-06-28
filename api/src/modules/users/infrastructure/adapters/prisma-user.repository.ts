@@ -26,7 +26,14 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
         throw new Error("Method not implemented.");
     }
     async findByEmail(email: string): Promise<User | null> {
-        throw new Error("Method not implemented.");
+        return this.handleDbOperation(async () => {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    email
+                }
+            });
+            return user ? UserMapper.toDomain(user) : null;
+        })
     }
     async update(id: string, data: Partial<User>): Promise<User> {
         throw new Error("Method not implemented.");
@@ -46,7 +53,7 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
                 }
             })
 
-            if(count === 0) return null;
+            if (count === 0) return null;
 
             const randomIndex = Math.floor(Math.random() * count);
             const user = await this.prisma.user.findFirst({
@@ -71,7 +78,7 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
                 }
             })
 
-            if(count === 0) return null;
+            if (count === 0) return null;
 
             const randomIndex = Math.floor(Math.random() * count);
             const user = await this.prisma.user.findFirst({

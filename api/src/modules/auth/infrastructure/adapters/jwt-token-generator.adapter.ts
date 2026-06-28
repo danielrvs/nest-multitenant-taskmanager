@@ -11,13 +11,14 @@ export class JwtTokenGeneratorAdapter implements TokenGeneratorPort {
 
     async generateToken(user: User): Promise<TokenPayload> {
         const payload = {
-            sub: user.id,
+            userId: user.id,
+            tenantId: user.tenantId,
             name: user.name,
             email: user.email.toString(),
             role: user.role
         }
         const accessToken = this.jwtService.sign(payload, { expiresIn: '3600s' });
-        const refreshToken = this.jwtService.sign({ sub: user.id }, { expiresIn: '7d' });
+        const refreshToken = this.jwtService.sign({ userId: user.id }, { expiresIn: '7d' });
 
         return {
             accessToken,

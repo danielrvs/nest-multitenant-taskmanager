@@ -4,12 +4,14 @@ import { UserRepositoryPort } from "../../../users/domain/ports/user.repository.
 import { UnauthorizedException } from "@nestjs/common";
 import { User } from "@/modules/users/domain/entities/user.entity";
 import { LoginResDto } from "../dtos/login.res.dto";
+import { TokenGeneratorPort, TokenPayload } from "../../domain/ports/token-generator.port";
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
 
     constructor(
         private readonly userRepository: UserRepositoryPort,
+        private readonly tokenGenerator: TokenGeneratorPort
     ) { }
 
     async execute(command: LoginCommand): Promise<LoginResDto> {
@@ -18,17 +20,23 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         const user = await this.findUser(email);
         await this.validatePassword(user, password);
 
+        const mfaActive = this.isMfaActive(user);
+
+
+
         const token = await this.generateToken(user);
         return {
-            accessToken: "token",
+            accessToken: token.accessToken,
             user: {
                 id: user.id,
+                tenantId: user.tenantId,
                 name: user.name,
                 email: user.email.toString(),
                 role: user.role
             },
-            expiresIn: 60 * 60,
-            refreshToken: "token"
+            expiresIn: token.expiresIn,
+            refreshToken: token.refreshToken,
+            twoFactorEnabled: mfaActive
         }
     }
 
@@ -43,7 +51,12 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         if (!isMatch) throw new UnauthorizedException("The credentials are not valid");
     }
 
-    private async generateToken(user: User): Promise<void> {
-        // TODO: implement token generation
+    private async generateToken(user: User): Promise<TokenPayload> {
+        return this.tokenGenerator.generateToken(user);
+    }
+
+    private isMfaActive(user: User): boolean {
+        if (user.mfaFactorConfirmedAt) return true;
+        return false;
     }
 }
