@@ -37,4 +37,56 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
     async findByTenantId(tenantId: string): Promise<User[]> {
         throw new Error("Method not implemented.");
     }
+
+    async findRandomByTenantId(tenantId: string): Promise<User | null> {
+        return this.handleDbOperation(async () => {
+            const count = await this.prisma.user.count({
+                where: {
+                    tenantId
+                }
+            })
+
+            if(count === 0) return null;
+
+            const randomIndex = Math.floor(Math.random() * count);
+            const user = await this.prisma.user.findFirst({
+                where: {
+                    tenantId
+                },
+                skip: randomIndex,
+                take: 1
+            });
+
+            return user ? UserMapper.toDomain(user) : null;
+        })
+    }
+    async findRandomByTenantIdWhereIdNotIn(tenantId: string, excludeIds: string[]): Promise<User | null> {
+        return this.handleDbOperation(async () => {
+            const count = await this.prisma.user.count({
+                where: {
+                    tenantId,
+                    id: {
+                        notIn: excludeIds
+                    }
+                }
+            })
+
+            if(count === 0) return null;
+
+            const randomIndex = Math.floor(Math.random() * count);
+            const user = await this.prisma.user.findFirst({
+                where: {
+                    tenantId,
+                    id: {
+                        notIn: excludeIds
+                    }
+                },
+                skip: randomIndex,
+                take: 1
+            });
+
+            return user ? UserMapper.toDomain(user) : null;
+        })
+    }
+
 }

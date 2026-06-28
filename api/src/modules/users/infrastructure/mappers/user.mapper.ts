@@ -40,7 +40,7 @@ export class UserMapper {
             name: user.name,
             email: user.email.toString(),
             password: user.password.toString(),
-            role: user.role as unknown as PrismaUserRole,
+            role: user.role as PrismaUserRole,
         };
     }
 
@@ -49,7 +49,7 @@ export class UserMapper {
             name: user.name,
             email: user.email.toString(),
             password: user.password.toString() ?? undefined,
-            role: user.role as unknown as PrismaUserRole,
+            role: user.role as PrismaUserRole,
             mfaSecret: user.mfaSecret,
             mfaRecoveryCodes: user.mfaRecoveryCodes,
             mfaFactorConfirmedAt: user.mfaFactorConfirmedAt
