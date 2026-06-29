@@ -5,6 +5,7 @@ import { INestApplication } from "@nestjs/common";
 import { UserFactoryBuilder } from "./user/user.factory";
 import { TenantFactoryBuilder } from "./tenant/tenant.factory";
 import { TaskFactoryBuilder } from "./task/task.factory";
+import { TokenGeneratorPort } from "@/modules/auth/domain/ports/token-generator.port";
 
 export class TestFactories {
     private static app: INestApplication;
@@ -28,7 +29,7 @@ export class TestFactories {
             throw new Error('TestFactories not initialized');
         }
 
-        return new UserFactoryBuilder(this.userRepository, this.tenantRepository);
+        return new UserFactoryBuilder(this.userRepository, this.tenantRepository, this.app.get(TokenGeneratorPort));
     }
 
     static tenant(): TenantFactoryBuilder {

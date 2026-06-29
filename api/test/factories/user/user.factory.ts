@@ -9,6 +9,7 @@ import { TenantRepositoryPort } from "@/modules/tenants/domain/ports/tenant.repo
 import { TestFactories } from "../test-factories";
 import { Email } from "@/modules/users/domain/entities/vo/email.vo";
 import { PasswordHash } from "@/modules/users/domain/entities/vo/password-hash.vo";
+import { TokenGeneratorPort, TokenPayload } from "@/modules/auth/domain/ports/token-generator.port";
 
 
 export type UserStateOverride = {
@@ -41,18 +42,19 @@ export type PrismaUserData = {
 export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
     constructor(
         protected readonly repository: UserRepositoryPort,
-        protected readonly tenantRepository: TenantRepositoryPort) {
+        protected readonly tenantRepository: TenantRepositoryPort,
+        protected readonly tokenGenerator: TokenGeneratorPort) {
         super(repository);
     }
 
     protected async defaultDefinition(): Promise<Required<UserStateOverride>> {
-        let tenant = await this.tenantRepository.findRandom();
-        if (!tenant) {
-            tenant = (await TestFactories.tenant().create())
+        let tenantId = this.overrides.tenantId ?? (await this.tenantRepository.findRandom())?.id;
+        if (!tenantId) {
+            tenantId = (await TestFactories.tenant().create()).id
         }
         return {
             id: randomUUID(),
-            tenantId: tenant.id,
+            tenantId,
             name: faker.person.firstName(),
             email: faker.internet.email(),
             password: faker.internet.password(),
@@ -90,6 +92,13 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
             mfaFactorConfirmedAt: new Date(),
         })
         return this;
+    }
+
+    public async createAuthenticatedUser(): Promise<{ user: User, auth: TokenPayload }> {
+        const user = await this.create();
+        const auth = await this.tokenGenerator.generateToken(user);
+
+        return { user, auth };
     }
 
 
