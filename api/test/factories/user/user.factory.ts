@@ -68,7 +68,6 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
     protected async createEntity(): Promise<User> {
         const def = { ...(await this.defaultDefinition()), ...this.overrides };
         const password = await PasswordHash.create(def.password);
-
         return new User(
             def.id,
             def.tenantId,
@@ -76,9 +75,9 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
             Email.create(def.email),
             password,
             def.role,
-            null,
-            null,
-            null,
+            def.mfaSecret,
+            def.mfaRecoveryCodes,
+            def.mfaFactorConfirmedAt,
             def.createdAt,
             def.updatedAt
         );
@@ -90,7 +89,6 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
             mfaRecoveryCodes: '123456',
             mfaFactorConfirmedAt: new Date(),
         })
-
         return this;
     }
 

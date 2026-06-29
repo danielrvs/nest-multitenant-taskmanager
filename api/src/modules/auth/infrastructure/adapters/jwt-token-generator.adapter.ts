@@ -28,6 +28,12 @@ export class JwtTokenGeneratorAdapter implements TokenGeneratorPort {
     }
 
     async generateMfaToken(user: User): Promise<string> {
-        throw new Error("Method not implemented.");
+        const payload = {
+            userId: user.id,
+            isMfaPending: true
+        }
+        const mfaToken = this.jwtService.sign(payload, { expiresIn: '5m' });
+
+        return mfaToken;
     }
 }

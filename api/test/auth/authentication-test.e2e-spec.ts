@@ -69,28 +69,33 @@ describe('Authentication Tests', () => {
         });
 
         it('should return a pre-auth token and redirect info when 2FA is enabled', async () => {
-            const user = await TestFactories.user().with2FA().create();
+            const password = 'test-password';
+            const user = await TestFactories.user().state({
+                password
+            }).with2FA().create();
+
             const response = await request(app.getHttpServer())
                 .post(route())
                 .send({
                     email: user.email.toString(),
-                    password: user.password.toString(),
+                    password,
                 })
 
             expect(response.status).toBe(202);
             expect(response.body.data.twoFactorEnabled).toBe(true);
 
-            expect(response.body.data.accessToken).toBeNull();
-            expect(response.body.data.refreshToken).toBeNull();
+            expect(response.body.data.accessToken).not.toBeDefined();
+            expect(response.body.data.refreshToken).not.toBeDefined();
 
             expect(response.body.data.mfaToken).toEqual(expect.any(String));
         });
 
         it('should return 401 when password or email is wrong', async () => {
-            const user = await TestFactories.user().create();
+            const password = 'test-password';
+            const user = await TestFactories.user().state({ password }).create();
             const wrongInputs = [
                 { email: user.email.toString(), password: faker.internet.password() },
-                { email: faker.internet.email(), password: user.password.toString() },
+                { email: faker.internet.email(), password },
             ]
 
             for (const input of wrongInputs) {
@@ -135,7 +140,8 @@ describe('Authentication Tests', () => {
         });
 
         it('should allow multiple successful logins for the same user', async () => {
-            const user = await TestFactories.user().create();
+            const password = 'test-password';
+            const user = await TestFactories.user().state({ password }).create();
 
             const responses = [];
             for (let i = 0; i < 3; i++) {
@@ -143,7 +149,7 @@ describe('Authentication Tests', () => {
                     .post(route())
                     .send({
                         email: user.email.toString(),
-                        password: user.password.toString(),
+                        password,
                     });
                 responses.push(response);
             }
@@ -157,14 +163,14 @@ describe('Authentication Tests', () => {
         });
 
         it('should allow user to logout and invalidate session for that specific user', async () => {
-
-            const user = await TestFactories.user().create();
+            const password = 'test-password';
+            const user = await TestFactories.user().state({ password }).create();
 
             const loginResponse = await request(app.getHttpServer())
                 .post(route())
                 .send({
                     email: user.email.toString(),
-                    password: user.password.toString(),
+                    password,
                 });
 
             expect(loginResponse.status).toBe(200);
