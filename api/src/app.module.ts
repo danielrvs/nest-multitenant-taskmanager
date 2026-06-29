@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TransformInterceptor } from './shared/infrastructure/interceptors/transform.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -16,6 +17,10 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 10000,
+      limit: 5
+    }]),
     PrismaModule,
     UserModule,
     TenantModule,

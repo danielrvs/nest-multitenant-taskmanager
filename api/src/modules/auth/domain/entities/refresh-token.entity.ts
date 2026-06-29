@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { createHash, randomUUID } from "crypto";
 
 export class RefreshToken {
     constructor(
@@ -14,13 +14,18 @@ export class RefreshToken {
 
     static create(userId: string, token: string, expiresAt: Date): RefreshToken {
         const now = new Date();
+        const hashedToken = RefreshToken.hashToken(token);
         return new RefreshToken(
             randomUUID(),
             userId,
-            token,
+            hashedToken,
             expiresAt,
             now,
             now
         )
+    }
+
+    static hashToken(token: string): string {
+        return createHash('sha256').update(token).digest('hex');
     }
 }

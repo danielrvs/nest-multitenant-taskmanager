@@ -18,6 +18,8 @@ import { cleanupDatabase } from "../helpers/clean-up-database.helper";
 import { setupTestApp } from "../helpers/setup-test.helper";
 import request from 'supertest';
 import { faker } from "@faker-js/faker";
+import { RefreshTokenRepositoryPort } from "@/modules/auth/domain/ports/refresh-token.repository.port";
+import { RefreshToken } from "@/modules/auth/domain/entities/refresh-token.entity";
 
 describe('Authentication Tests', () => {
     let app: INestApplication;
@@ -128,6 +130,7 @@ describe('Authentication Tests', () => {
             const promises = Array.from({ length: 6 }).map(() =>
                 request(app.getHttpServer())
                     .post(route())
+                    .set('x-force-throttler', 'true') 
                     .send({
                         email: user.email.toString(),
                         password: 'wrong-password'
@@ -177,14 +180,21 @@ describe('Authentication Tests', () => {
             expect(loginResponse.body.data.accessToken).toBeDefined();
             expect(loginResponse.body.data.refreshToken).toBeDefined();
 
+            const hashedRefreshToken = RefreshToken.hashToken(loginResponse.body.data.refreshToken)
+            const refreshTokenRepository = app.get(RefreshTokenRepositoryPort)
+            const exist = await refreshTokenRepository.findByTokenAndUserId(hashedRefreshToken, user.id)
+            expect(exist).toBeTruthy();
+
             const logoutResponse = await request(app.getHttpServer())
                 .post('/auth/logout')
+                .set('Cookie', `refresh-token=${loginResponse.body.data.refreshToken}`)
                 .set('Authorization', `Bearer ${loginResponse.body.data.accessToken}`)
                 .send();
 
-            expect(logoutResponse.status).toBe(200);
-            expect(logoutResponse.body.data).toBe('Logged out successfully');
+            expect(logoutResponse.status).toBe(204);
 
+            const notExist = await refreshTokenRepository.findByTokenAndUserId(hashedRefreshToken, user.id)
+            expect(notExist).toBeFalsy();
         });
 
 

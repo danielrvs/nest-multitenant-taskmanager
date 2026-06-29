@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { TokenGeneratorPort, TokenPayload } from "../../domain/ports/token-generator.port";
 import { User } from "@/modules/users/domain/entities/user.entity";
 import { JwtService } from "@nestjs/jwt";
+import { randomUUID } from "crypto";
 
 @Injectable()
 export class JwtTokenGeneratorAdapter implements TokenGeneratorPort {
@@ -18,7 +19,10 @@ export class JwtTokenGeneratorAdapter implements TokenGeneratorPort {
             role: user.role
         }
         const accessToken = this.jwtService.sign(payload, { expiresIn: '3600s' });
-        const refreshToken = this.jwtService.sign({ userId: user.id }, { expiresIn: '7d' });
+        const refreshToken = this.jwtService.sign(
+            { userId: user.id, jti: randomUUID() },
+            { expiresIn: '7d' }
+        );
 
         return {
             accessToken,

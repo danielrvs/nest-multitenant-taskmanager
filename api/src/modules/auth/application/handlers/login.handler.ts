@@ -6,13 +6,17 @@ import { User } from "@/modules/users/domain/entities/user.entity";
 import { LoginResDto } from "../dtos/login.res.dto";
 import { TokenGeneratorPort, TokenPayload } from "../../domain/ports/token-generator.port";
 import { MFALoginResDto } from "../dtos/mfa-login.res.dto";
+import { RefreshTokenRepositoryPort } from "../../domain/ports/refresh-token.repository.port";
+import { RefreshToken } from "../../domain/entities/refresh-token.entity";
+import { createHash } from "crypto";
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
 
     constructor(
         private readonly userRepository: UserRepositoryPort,
-        private readonly tokenGenerator: TokenGeneratorPort
+        private readonly tokenGenerator: TokenGeneratorPort,
+        private readonly refreshTokenRepository: RefreshTokenRepositoryPort
     ) { }
 
     async execute(command: LoginCommand): Promise<LoginResDto | MFALoginResDto> {
@@ -56,6 +60,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
 
     private async loginToken(user: User): Promise<LoginResDto> {
         const token = await this.generateToken(user);
+        await this.saveRefreshToken(token.refreshToken, user);
         return {
             accessToken: token.accessToken,
             user: {
@@ -69,5 +74,11 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
             refreshToken: token.refreshToken,
             twoFactorEnabled: false
         }
+    }
+
+    private async saveRefreshToken(refreshToken: string, user: User): Promise<void> {
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const newRefreshToken = RefreshToken.create(user.id, refreshToken, expiresAt);
+        await this.refreshTokenRepository.create(newRefreshToken);
     }
 }

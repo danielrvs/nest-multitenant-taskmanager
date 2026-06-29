@@ -11,9 +11,10 @@ import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtStrategy } from "./infrastructure/strategies/jwt.strategy";
+import { LogoutHandler } from "./application/handlers/logout.handler";
 
 
-const commandHandlers = [LoginHandler]
+const commandHandlers = [LoginHandler, LogoutHandler]
 const queriesHandlers = []
 
 @Module({
