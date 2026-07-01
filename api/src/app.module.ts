@@ -7,9 +7,10 @@ import { TenantModule } from './modules/tenants/tenant.module';
 import { TaskModule } from './modules/tasks/task.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TransformInterceptor } from './shared/infrastructure/interceptors/transform.interceptor';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { JwtAuthGuard } from './shared/infrastructure/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -33,6 +34,11 @@ import { ThrottlerModule } from '@nestjs/throttler';
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor
-    }],
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard
+    }
+  ],
 })
 export class AppModule { }

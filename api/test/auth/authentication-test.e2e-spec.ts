@@ -1,14 +1,3 @@
-/**
- * should return 400 when email is missing
- * should return 400 when password is missing
- * should return 400 when email is invalid format
- * should allow multiple successful logins for the same user (both tokens should be valid but different)
- * users can logout and return 200
- * users are rate limited and return 429
- * 
- 
- */
-
 import { AppModule } from "@/app.module";
 import { PrismaService } from "@/shared/infrastructure/prisma/prisma.service";
 import { INestApplication } from "@nestjs/common";
@@ -130,7 +119,7 @@ describe('Authentication Tests', () => {
             const promises = Array.from({ length: 6 }).map(() =>
                 request(app.getHttpServer())
                     .post(route())
-                    .set('x-force-throttler', 'true') 
+                    .set('x-force-throttler', 'true')
                     .send({
                         email: user.email.toString(),
                         password: 'wrong-password'

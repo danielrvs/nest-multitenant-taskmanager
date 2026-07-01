@@ -20,7 +20,7 @@ export class MFALoginResDto {
         description: 'Two factor authentication enabled',
         required: true
     })
-    twoFactorEnabled: boolean;
+    mfaRequired: boolean;
 
 
 }

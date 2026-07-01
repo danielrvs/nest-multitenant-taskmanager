@@ -35,6 +35,18 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
             return user ? UserMapper.toDomain(user) : null;
         })
     }
+
+    async findById(id: string): Promise<User | null> {
+        return this.handleDbOperation(async () => {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    id
+                }
+            });
+            return user ? UserMapper.toDomain(user) : null;
+        })
+    }
+
     async update(id: string, data: Partial<User>): Promise<User> {
         throw new Error("Method not implemented.");
     }

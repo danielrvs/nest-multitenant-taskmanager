@@ -55,11 +55,12 @@ model User {
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
-  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  createdTasks  Task[]         @relation("CreatedTasks")
-  assignedTasks Task[]         @relation("AssignedTasks")
-  taskAudits    TaskAudit[]
-  refreshTokens RefreshToken[]
+  tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdTasks   Task[]           @relation("CreatedTasks")
+  assignedTasks  Task[]           @relation("AssignedTasks")
+  taskAudits     TaskAudit[]
+  refreshTokens  RefreshToken[]
+  mfaBackupCodes MfaBackupCodes[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -80,6 +81,21 @@ model RefreshToken {
   @@unique([token, userId])
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model MfaBackupCodes {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  code      String   @unique @db.VarChar(255)
+  used      Boolean  @default(false) @map("used")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([code, userId])
+  @@index([userId])
+  @@map("mfa_backup_codes")
 }
 
 model Task {

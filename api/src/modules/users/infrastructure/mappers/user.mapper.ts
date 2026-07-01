@@ -1,15 +1,22 @@
 import { User } from "../../domain/entities/user.entity";
-import { User as PrismaUser, Tenant as PrismaTenant, Task as PrismaTask, TaskAudit as PrismaTaskAudit, Prisma, UserRole as PrismaUserRole } from "generated/prisma/client";
+import { User as PrismaUser, Tenant as PrismaTenant, Task as PrismaTask, TaskAudit as PrismaTaskAudit, Prisma, UserRole as PrismaUserRole, RefreshToken as PrismaRefreshToken, MfaBackupCodes as PrismaMfaBackupCodes } from "generated/prisma/client";
 import { Email } from "../../domain/entities/vo/email.vo";
 import { PasswordHash } from "../../domain/entities/vo/password-hash.vo";
 import { UserRole } from "../../domain/entities/enums/user-role.enum";
 import { UserResDto } from "../../application/dtos/user.res.dto";
+import { TenantMapper } from "@/modules/tenants/infrastructure/mappers/tenant.mappert";
+import { TaskMapper } from "@/modules/tasks/infrastructure/mappers/task.mapper";
+import { TaskAuditMapper } from "@/modules/tasks/infrastructure/mappers/task-audit.mapper";
+import { RefreshTokenMapper } from "@/modules/auth/infrastructure/mappers/refresh-token.mapper";
+import { MfaBackupCodesMapper } from "@/modules/auth/infrastructure/mappers/mfa-backup-codes.mapper";
 
 type UserWithRelations = PrismaUser & {
     tenant?: PrismaTenant
     createdTasks?: PrismaTask[]
     assignedTasks?: PrismaTask[]
     taskAudits?: PrismaTaskAudit[]
+    refreshTokens?: PrismaRefreshToken[]
+    mfaBackupCodes?: PrismaMfaBackupCodes[]
 }
 
 export class UserMapper {
@@ -25,7 +32,13 @@ export class UserMapper {
             prismaUser.mfaRecoveryCodes,
             prismaUser.mfaFactorConfirmedAt,
             prismaUser.createdAt,
-            prismaUser.updatedAt
+            prismaUser.updatedAt,
+            prismaUser.tenant ? TenantMapper.toDomain(prismaUser.tenant) : null,
+            prismaUser.createdTasks ? prismaUser.createdTasks.map((task) => TaskMapper.toDomain(task)) : null,
+            prismaUser.assignedTasks ? prismaUser.assignedTasks.map((task) => TaskMapper.toDomain(task)) : null,
+            prismaUser.taskAudits ? prismaUser.taskAudits.map((audit) => TaskAuditMapper.toDomain(audit)) : null,
+            prismaUser.refreshTokens ? prismaUser.refreshTokens.map((token) => RefreshTokenMapper.toDomain(token)) : null,
+            prismaUser.mfaBackupCodes ? prismaUser.mfaBackupCodes.map((code) => MfaBackupCodesMapper.toDomain(code)) : null
         );
     }
 

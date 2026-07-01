@@ -6,4 +6,5 @@ export interface Authenticated {
     name: string;
     email: string;
     role: UserRole;
+    isMfaPending: boolean;
 }

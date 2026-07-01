@@ -43,10 +43,10 @@ export class LoginResDto {
 
     @ApiProperty({
         example: false,
-        description: 'Two factor authentication enabled',
+        description: 'Two factor authentication required',
         required: true
     })
-    twoFactorEnabled: boolean;
+    mfaRequired: boolean;
 
 
 }

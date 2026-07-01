@@ -94,6 +94,13 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
         return this;
     }
 
+    public async createMfaUnverifiedUser(): Promise<{ user: User, token: string }> {
+        const user = await this.create();
+        const token = await this.tokenGenerator.generateMfaToken(user);
+
+        return { user, token };
+    }
+
     public async createAuthenticatedUser(): Promise<{ user: User, auth: TokenPayload }> {
         const user = await this.create();
         const auth = await this.tokenGenerator.generateToken(user);

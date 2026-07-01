@@ -2,6 +2,11 @@ import { randomUUID } from "crypto";
 import { UserRole } from "./enums/user-role.enum";
 import { Email } from "./vo/email.vo";
 import { PasswordHash } from "./vo/password-hash.vo";
+import { Tenant } from "@/modules/tenants/domain/entities/tenant.entity";
+import { Task } from "@/modules/tasks/domain/entities/task.entity";
+import { TaskAudit } from "@/modules/tasks/domain/entities/task-audit.entity";
+import { RefreshToken } from "@/modules/auth/domain/entities/refresh-token.entity";
+import { MfaBackupCodes } from "@/modules/auth/domain/entities/mfa-backup-codes.entity";
 
 export class User {
     constructor(
@@ -15,7 +20,14 @@ export class User {
         public readonly mfaRecoveryCodes: string | null,
         public readonly mfaFactorConfirmedAt: Date | null,
         public readonly createdAt: Date,
-        public readonly updatedAt: Date
+        public readonly updatedAt: Date,
+
+        public readonly tenant: Tenant | null = null,
+        public readonly createdTasks: Task[] | null = null,
+        public readonly assignedTasks: Task[] | null = null,
+        public readonly taskAudits: TaskAudit[] | null = null,
+        public readonly refreshTokens: RefreshToken[] | null = null,
+        public readonly mfaBackupCodes: MfaBackupCodes[] | null = null
     ) {
 
     }
@@ -42,7 +54,7 @@ export class User {
             null,
             null,
             now,
-            now
+            now,
         )
     }
 

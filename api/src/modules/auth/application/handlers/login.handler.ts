@@ -54,7 +54,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         return {
             mfaToken: mfaToken,
             expiresIn: 300,
-            twoFactorEnabled: true
+            mfaRequired: true
         }
     }
 
@@ -72,7 +72,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
             },
             expiresIn: token.expiresIn,
             refreshToken: token.refreshToken,
-            twoFactorEnabled: false
+            mfaRequired: false
         }
     }
 
