@@ -56,7 +56,7 @@ export class User {
         )
     }
 
-    setMfaSecret(secret: string): void {
+    setMFASecret(secret: string): void {
         this.mfaSecret = secret;
     }
 
@@ -65,7 +65,7 @@ export class User {
         this.mfaFactorConfirmedAt = null;
     }
 
-    enableMfa(): void {
+    enableMFA(): void {
         this.mfaFactorConfirmedAt = new Date();
     }
 

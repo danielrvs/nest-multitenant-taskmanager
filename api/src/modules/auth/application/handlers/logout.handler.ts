@@ -1,8 +1,6 @@
 import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
 import { LogoutCommand } from "../commands/logout.command";
-import { UserRepositoryPort } from "../../../users/domain/ports/user.repository.port";
 import { RefreshTokenRepositoryPort } from "../../domain/ports/refresh-token.repository.port";
-import { createHash } from "crypto";
 import { UnauthorizedException } from "@nestjs/common";
 import { RefreshToken } from "../../domain/entities/refresh-token.entity";
 

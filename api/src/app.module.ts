@@ -12,12 +12,14 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { JwtAuthGuard } from './shared/infrastructure/guards/jwt-auth.guard';
 import { RedisCacheModule } from './shared/infrastructure/cache/redis-cache.module';
+import authConfig from './modules/auth/infrastructure/config/auth.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      load: [authConfig],
     }),
     ThrottlerModule.forRoot([{
       ttl: 10000,

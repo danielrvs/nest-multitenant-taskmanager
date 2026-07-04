@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsString, Length } from "class-validator";
+import { IsNotEmpty, IsNumberString, Length } from "class-validator";
 
 export class MfaChallengeReqDto {
     @ApiProperty({
@@ -8,7 +8,7 @@ export class MfaChallengeReqDto {
         minLength: 6,
         maxLength: 6,
     })
-    @IsString()
+    @IsNumberString({}, { message: 'The TOTP code must be a number' })
     @IsNotEmpty()
     @Length(6, 6, { message: 'The TOTP code must be 6 digits long' })
     totpCode: string;

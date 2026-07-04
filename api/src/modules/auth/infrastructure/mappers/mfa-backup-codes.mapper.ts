@@ -1,21 +1,18 @@
 import { MfaBackupCodes } from "../../domain/entities/mfa-backup-codes.entity";
 import { MfaBackupCodes as PrismaMfaBackupCodes, Prisma, User as PrismaUser } from "generated/prisma/client";
 import { UserMapper } from "@/modules/users/infrastructure/mappers/user.mapper";
+import { PasswordHash } from "@/modules/users/domain/entities/vo/password-hash.vo";
 
 type MfaBackupCodesWithRelations = PrismaMfaBackupCodes & {
     user?: PrismaUser;
 };
 
 export class MfaBackupCodesMapper {
-    constructor() {
-
-    }
-
     static toDomain(data: MfaBackupCodesWithRelations): MfaBackupCodes {
         return new MfaBackupCodes(
             data.id,
             data.userId,
-            data.code,
+            new PasswordHash(data.code),
             data.used,
             data.createdAt,
             data.updatedAt,
@@ -27,7 +24,7 @@ export class MfaBackupCodesMapper {
         return {
             id: entity.id,
             user: { connect: { id: entity.userId } },
-            code: entity.code,
+            code: entity.code.toString(),
             used: entity.used,
             createdAt: entity.createdAt,
             updatedAt: entity.updatedAt,
@@ -38,7 +35,7 @@ export class MfaBackupCodesMapper {
         return {
             id: entity.id,
             userId: entity.userId,
-            code: entity.code,
+            code: entity.code.toString(),
             used: entity.used,
             createdAt: entity.createdAt,
             updatedAt: entity.updatedAt,

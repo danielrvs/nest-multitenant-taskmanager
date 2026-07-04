@@ -1,4 +1,4 @@
-import { CommandHandler, ICommandHandler, QueryHandler } from "@nestjs/cqrs";
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
 import { MfaChallengeCommand } from "../commands/mfa-challenge.command";
 import { UserRepositoryPort } from "../../../users/domain/ports/user.repository.port";
 import { BadRequestException, UnauthorizedException } from "@nestjs/common";

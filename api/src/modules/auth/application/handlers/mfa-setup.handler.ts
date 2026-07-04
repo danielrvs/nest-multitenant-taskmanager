@@ -22,7 +22,7 @@ export class MfaSetupHandler implements ICommandHandler<MfaSetupCommand, string>
         const { secret, qrCodeUri } = await this.mfaGenerator.generateMfaSetup(userFound.email.toString(), userFound.tenant.name.toString());
 
 
-        userFound.setMfaSecret(secret);
+        userFound.setMFASecret(secret);
 
         await this.userRepository.update(userFound.id, userFound);
 

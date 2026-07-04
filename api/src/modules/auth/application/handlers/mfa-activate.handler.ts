@@ -5,13 +5,21 @@ import { UserRepositoryPort } from "@/modules/users/domain/ports/user.repository
 import { MfaBackupCodesRepositoryPort } from "../../domain/ports/mfa-backup-codes.repository.port";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { MfaBackupCodes } from "../../domain/entities/mfa-backup-codes.entity";
+import { ConfigService } from "@nestjs/config";
 
 @CommandHandler(MfaActivateCommand)
 export class MfaActivateHandler implements ICommandHandler<MfaActivateCommand> {
+
+    private readonly backupCodesCount: number;
+
     constructor(private readonly mfaValidator: MfaValidatorPort,
         private readonly userRepository: UserRepositoryPort,
-        private readonly mfaBackupCodesRepository: MfaBackupCodesRepositoryPort
-    ) { }
+        private readonly mfaBackupCodesRepository: MfaBackupCodesRepositoryPort,
+        private readonly configService: ConfigService,
+    ) {
+
+        this.backupCodesCount = this.configService.get<number>('auth.backupCodesCount', 8);
+    }
 
     async execute(command: MfaActivateCommand): Promise<string[]> {
         const { user, totpCode } = command;
@@ -33,19 +41,21 @@ export class MfaActivateHandler implements ICommandHandler<MfaActivateCommand> {
             throw new UnauthorizedException('Invalid MFA code');
         }
 
-        userFound.enableMfa();
+        userFound.enableMFA();
 
         await this.userRepository.update(userFound.id, userFound);
 
         const backupCodes: MfaBackupCodes[] = [];
-        for (let i = 0; i < 8; i++) {
-            const backupCode = MfaBackupCodes.create({ userId: userFound.id });
+        const plainTextCodes: string[] = [];
+
+        for (let i = 0; i < this.backupCodesCount; i++) {
+            const code = MfaBackupCodes.generateCode();
+            plainTextCodes.push(code);
+            const backupCode = await MfaBackupCodes.create({ userId: userFound.id, code });
             backupCodes.push(backupCode);
         }
 
         await this.mfaBackupCodesRepository.createMany(backupCodes);
-
-        const plainTextCodes = backupCodes.map(code => code.code);
 
         return plainTextCodes;
 

@@ -1,11 +1,12 @@
 import { User } from "@/modules/users/domain/entities/user.entity";
+import { PasswordHash } from "@/modules/users/domain/entities/vo/password-hash.vo";
 import { randomUUID, randomBytes } from "crypto";
 
 export class MfaBackupCodes {
     constructor(
         public readonly id: string,
         public readonly userId: string,
-        public readonly code: string,
+        public readonly code: PasswordHash,
         public used: boolean,
         public readonly createdAt: Date,
         public updatedAt: Date,
@@ -15,14 +16,20 @@ export class MfaBackupCodes {
 
     }
 
-    static create(data: {
+    static async create(data: {
         userId: string,
-    }): MfaBackupCodes {
-        const code = MfaBackupCodes.generateCode();
+        code?: string
+    }): Promise<MfaBackupCodes> {
+        let codeHash: PasswordHash;
+        if (data.code) {
+            codeHash = await PasswordHash.create(data.code);
+        } else {
+            codeHash = await PasswordHash.create(MfaBackupCodes.generateCode());
+        }
         return new MfaBackupCodes(
             randomUUID(),
             data.userId,
-            code,
+            codeHash,
             false,
             new Date(),
             new Date()
@@ -40,4 +47,5 @@ export class MfaBackupCodes {
         this.used = true;
         this.updatedAt = new Date();
     }
+
 }

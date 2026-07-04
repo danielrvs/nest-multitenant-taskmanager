@@ -11,6 +11,7 @@ import { Authenticated } from "../../domain/interfaces/authenticated.interface";
 import { LogoutCommand } from "../../application/commands/logout.command";
 import { CustomThrottlerGuard } from "@/shared/infrastructure/guards/custom-throttler.guard";
 import { Public } from "@/shared/infrastructure/decorators/public.decorator";
+import { ConfigService } from "@nestjs/config";
 
 
 @Controller('auth')
@@ -18,7 +19,8 @@ import { Public } from "@/shared/infrastructure/decorators/public.decorator";
 export class AuthController {
     constructor(
         private readonly commandBus: CommandBus,
-        private readonly queryBus: QueryBus
+        private readonly queryBus: QueryBus,
+        private readonly configService: ConfigService
     ) { }
 
     @Post('login')
@@ -28,32 +30,41 @@ export class AuthController {
         const command = new LoginCommand(dto.email, dto.password);
         const result = await this.commandBus.execute<LoginCommand, LoginResDto | MFALoginResDto>(command);
 
-        if (result.mfaRequired === true && result instanceof MFALoginResDto) {
+        const expiresIn = this.configService.get<number>('auth.accessTokenExpiry');
+        const accessTokenName = this.configService.get<string>('auth.accessTokenCookie');
+
+
+        if (result.mfaRequired === true) {
+            const resMFALogin = result as MFALoginResDto;
             res.status(HttpStatus.ACCEPTED)
-            res.cookie('access_token', result.mfaToken, {
+            res.cookie(accessTokenName, resMFALogin.mfaToken, {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'lax',
-                maxAge: result.expiresIn * 1000
+                maxAge: expiresIn * 1000
             });
             return result;
         }
 
-        if (result instanceof LoginResDto) {
-            res.cookie('access_token', result.accessToken, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'lax',
-                maxAge: result.expiresIn * 1000
-            });
 
-            res.cookie('refresh_token', result.refreshToken, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'lax',
-                maxAge: 60 * 60 * 24 * 7 * 1000
-            });
-        }
+        const resLogin = result as LoginResDto;
+        const refreshTokenExpiresIn = this.configService.get<number>('auth.refreshTokenExpiry');
+        const refreshTokenName = this.configService.get<string>('auth.refreshTokenCookie');
+
+        res.cookie(accessTokenName, resLogin.accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            maxAge: expiresIn * 1000
+        });
+
+        res.cookie(refreshTokenName, resLogin.refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            maxAge: refreshTokenExpiresIn * 1000
+        });
+
 
 
         res.status(HttpStatus.OK)
@@ -68,12 +79,15 @@ export class AuthController {
         @Req() req: any,
         @Res({ passthrough: true }) res: Response
     ): Promise<void> {
-        const refreshToken = req.cookies?.['refresh_token'] || req.body?.refreshToken;
+        const accessTokenName = this.configService.get<string>('auth.accessTokenCookie');
+        const refreshTokenName = this.configService.get<string>('auth.refreshTokenCookie');
+
+        const refreshToken = req.cookies?.[refreshTokenName] || req.body?.refreshToken;
         const command = new LogoutCommand(user.userId, refreshToken);
         await this.commandBus.execute<LogoutCommand>(command);
 
-        res.clearCookie('access_token');
-        res.clearCookie('refresh_token');
+        res.clearCookie(accessTokenName);
+        res.clearCookie(refreshTokenName);
     }
 
 }

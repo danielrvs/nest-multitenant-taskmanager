@@ -17,13 +17,15 @@ import { MfaDeactivateCommand } from "../../application/commands/mfa-deactivate.
 import { MfaActivateReqDto } from "../../application/dtos/mfa-activate.req.dto";
 import { MfaDeactivateReqDto } from "../../application/dtos/mfa-deactivate.req.dto";
 import { MfaActivateResDto } from "../../application/dtos/mfa-activate.res.dto";
+import { ConfigService } from "@nestjs/config";
 
 
 @Controller('auth/mfa')
 export class MfaController {
 
     constructor(
-        private readonly commandBus: CommandBus
+        private readonly commandBus: CommandBus,
+        private readonly configService: ConfigService
     ) { }
 
     @Post('setup')
@@ -62,18 +64,23 @@ export class MfaController {
         const command = new MfaChallengeCommand(user, dto.totpCode);
         const result = await this.commandBus.execute<MfaChallengeCommand, LoginResDto>(command);
 
-        res.cookie('access_token', result.accessToken, {
+        const expiresIn = this.configService.get<number>('auth.accessTokenExpiry');
+        const accessTokenName = this.configService.get<string>('auth.accessTokenCookie');
+        const refreshTokenExpiresIn = this.configService.get<number>('auth.refreshTokenExpiry');
+        const refreshTokenName = this.configService.get<string>('auth.refreshTokenCookie');
+
+        res.cookie(accessTokenName, result.accessToken, {
             httpOnly: true,
             secure: true,
             sameSite: 'lax',
-            maxAge: result.expiresIn * 1000
+            maxAge: expiresIn * 1000
         });
 
-        res.cookie('refresh_token', result.refreshToken, {
+        res.cookie(refreshTokenName, result.refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 7 * 1000
+            maxAge: refreshTokenExpiresIn * 1000
         });
 
         return result;

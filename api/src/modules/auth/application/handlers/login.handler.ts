@@ -8,24 +8,28 @@ import { TokenGeneratorPort, TokenPayload } from "../../domain/ports/token-gener
 import { MFALoginResDto } from "../dtos/mfa-login.res.dto";
 import { RefreshTokenRepositoryPort } from "../../domain/ports/refresh-token.repository.port";
 import { RefreshToken } from "../../domain/entities/refresh-token.entity";
-import { createHash } from "crypto";
+import { ConfigService } from "@nestjs/config";
 
 @CommandHandler(LoginCommand)
 export class LoginHandler implements ICommandHandler<LoginCommand> {
-
+    private readonly accessTokenExpiresIn: number;
+    private readonly refreshTokenExpiresIn: number;
     constructor(
         private readonly userRepository: UserRepositoryPort,
         private readonly tokenGenerator: TokenGeneratorPort,
-        private readonly refreshTokenRepository: RefreshTokenRepositoryPort
-    ) { }
+        private readonly refreshTokenRepository: RefreshTokenRepositoryPort,
+        private readonly configService: ConfigService
+    ) {
+        this.accessTokenExpiresIn = this.configService.get<number>('auth.accessTokenExpiry');
+        this.refreshTokenExpiresIn = this.configService.get<number>('auth.refreshTokenExpiry');
+    }
 
     async execute(command: LoginCommand): Promise<LoginResDto | MFALoginResDto> {
 
         const { email, password } = command;
         const user = await this.findUser(email);
         await this.validatePassword(user, password);
-        const mfaActive = this.isMfaActive(user);
-        if (mfaActive) return await this.mfaToken(user);
+        if (user.isMFAEnabled()) return await this.mfaToken(user);
         return await this.loginToken(user);
     }
 
@@ -44,16 +48,11 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
         return this.tokenGenerator.generateToken(user);
     }
 
-    private isMfaActive(user: User): boolean {
-        if (user.mfaFactorConfirmedAt) return true;
-        return false;
-    }
-
     private async mfaToken(user: User): Promise<MFALoginResDto> {
         const mfaToken = await this.tokenGenerator.generateMfaToken(user);
         return {
             mfaToken: mfaToken,
-            expiresIn: 300,
+            expiresIn: this.accessTokenExpiresIn,
             mfaRequired: true
         }
     }
@@ -70,14 +69,14 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
                 email: user.email.toString(),
                 role: user.role
             },
-            expiresIn: token.expiresIn,
+            expiresIn: this.accessTokenExpiresIn,
             refreshToken: token.refreshToken,
             mfaRequired: false
         }
     }
 
     private async saveRefreshToken(refreshToken: string, user: User): Promise<void> {
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + this.refreshTokenExpiresIn);
         const newRefreshToken = RefreshToken.create(user.id, refreshToken, expiresAt);
         await this.refreshTokenRepository.create(newRefreshToken);
     }

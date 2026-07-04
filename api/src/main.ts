@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './shared/infrastructure/filters/all-exceptions.filter';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -30,10 +31,14 @@ async function bootstrap() {
     credentials: true,
   });
 
+  const configService = app.get(ConfigService);
+  const accessTokenName = configService.get<string>('auth.accessTokenCookie');
+
   const config = new DocumentBuilder()
     .setTitle('Multitenant Task Manager API')
     .setDescription('API para la gestión de tareas')
     .setVersion('1.0')
+    .addCookieAuth(accessTokenName)
     .addBearerAuth()
     .build()
 
