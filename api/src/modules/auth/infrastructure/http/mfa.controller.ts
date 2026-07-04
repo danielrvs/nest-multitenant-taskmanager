@@ -16,6 +16,7 @@ import { MfaActivateCommand } from "../../application/commands/mfa-activate.comm
 import { MfaDeactivateCommand } from "../../application/commands/mfa-deactivate.command";
 import { MfaActivateReqDto } from "../../application/dtos/mfa-activate.req.dto";
 import { MfaDeactivateReqDto } from "../../application/dtos/mfa-deactivate.req.dto";
+import { MfaActivateResDto } from "../../application/dtos/mfa-activate.res.dto";
 
 
 @Controller('auth/mfa')
@@ -39,9 +40,12 @@ export class MfaController {
     @Post('activate')
     @ResponseMessage('MFA setup activated')
     @HttpCode(HttpStatus.OK)
-    async mfaActivate(@CurrentUser() user: Authenticated, @Body() request: MfaActivateReqDto): Promise<void> {
+    async mfaActivate(@CurrentUser() user: Authenticated, @Body() request: MfaActivateReqDto): Promise<MfaActivateResDto> {
         const command = new MfaActivateCommand(user, request.totpCode);
-        await this.commandBus.execute<MfaActivateCommand, void>(command);
+        const res = await this.commandBus.execute<MfaActivateCommand, string[]>(command);
+        return {
+            backupCodes: res
+        }
     }
 
 

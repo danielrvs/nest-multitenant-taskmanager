@@ -65,6 +65,10 @@ export class User {
         this.mfaFactorConfirmedAt = null;
     }
 
+    enableMfa(): void {
+        this.mfaFactorConfirmedAt = new Date();
+    }
+
     isMFAEnabled(): boolean {
         return this.mfaFactorConfirmedAt !== null && this.mfaSecret !== null;
     }
