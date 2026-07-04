@@ -55,7 +55,7 @@ describe('Authentication Tests', () => {
                 });
 
             expect(response.status).toBe(200);
-            expect(response.body.data.twoFactorEnabled).toBe(false);
+            expect(response.body.data.mfaRequired).toBe(false);
             expect(response.body.data.accessToken).toBeDefined();
         });
 
@@ -73,7 +73,7 @@ describe('Authentication Tests', () => {
                 })
 
             expect(response.status).toBe(202);
-            expect(response.body.data.twoFactorEnabled).toBe(true);
+            expect(response.body.data.mfaRequired).toBe(true);
 
             expect(response.body.data.accessToken).not.toBeDefined();
             expect(response.body.data.refreshToken).not.toBeDefined();
@@ -176,7 +176,7 @@ describe('Authentication Tests', () => {
 
             const logoutResponse = await request(app.getHttpServer())
                 .post('/auth/logout')
-                .set('Cookie', `refresh-token=${loginResponse.body.data.refreshToken}`)
+                .set('Cookie', `refresh_token=${loginResponse.body.data.refreshToken}`)
                 .set('Authorization', `Bearer ${loginResponse.body.data.accessToken}`)
                 .send();
 

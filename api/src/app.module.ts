@@ -11,6 +11,7 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { JwtAuthGuard } from './shared/infrastructure/guards/jwt-auth.guard';
+import { RedisCacheModule } from './shared/infrastructure/cache/redis-cache.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { JwtAuthGuard } from './shared/infrastructure/guards/jwt-auth.guard';
       limit: 5
     }]),
     PrismaModule,
+    RedisCacheModule,
     UserModule,
     TenantModule,
     TaskModule,

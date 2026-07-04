@@ -12,9 +12,20 @@ import { JwtModule } from "@nestjs/jwt";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtStrategy } from "./infrastructure/strategies/jwt.strategy";
 import { LogoutHandler } from "./application/handlers/logout.handler";
+import { MfaChallengeHandler } from "./application/handlers/mfa-challenge.handler";
+import { MfaController } from "./infrastructure/http/mfa.controller";
+import { MfaValidatorPort } from "./domain/ports/mfa-validator.port";
+import { OtplibMfaValidatorAdapter } from "./infrastructure/adapters/otplib-mfa-validator.adapter";
+import { MfaSetupHandler } from "./application/handlers/mfa-setup.handler";
+import { MfaGeneratorPort } from "./domain/ports/mfa-generator.port";
+import { OtplibMfaGeneratorAdapter } from "./infrastructure/adapters/otplib-mfa-generator.adapter";
+import { MfaBackupCodesRepositoryPort } from "./domain/ports/mfa-backup-codes.repository.port";
+import { PrismaMfaBackupCodesRepository } from "./infrastructure/adapters/prisma-mfa-backup-codes.repository.adapter";
 
 
-const commandHandlers = [LoginHandler, LogoutHandler]
+const commandHandlers = [
+    LoginHandler, LogoutHandler, MfaSetupHandler, MfaChallengeHandler
+]
 const queriesHandlers = []
 
 @Module({
@@ -31,7 +42,7 @@ const queriesHandlers = []
         }),
         PassportModule,
         UserModule],
-    controllers: [AuthController],
+    controllers: [AuthController, MfaController],
     providers: [...commandHandlers, ...queriesHandlers,
     {
         provide: RefreshTokenRepositoryPort,
@@ -40,6 +51,18 @@ const queriesHandlers = []
     {
         provide: TokenGeneratorPort,
         useClass: JwtTokenGeneratorAdapter
+    },
+    {
+        provide: MfaValidatorPort,
+        useClass: OtplibMfaValidatorAdapter
+    },
+    {
+        provide: MfaGeneratorPort,
+        useClass: OtplibMfaGeneratorAdapter
+    },
+    {
+        provide: MfaBackupCodesRepositoryPort,
+        useClass: PrismaMfaBackupCodesRepository
     },
         JwtStrategy
     ]

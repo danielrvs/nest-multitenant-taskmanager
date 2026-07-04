@@ -1,10 +1,28 @@
+import { TenantMapper } from "@/modules/tenants/infrastructure/mappers/tenant.mappert";
 import { TaskPriority } from "../../domain/entities/enums/task-priority.enum";
 import { TaskStatus } from "../../domain/entities/enums/task-status.enum";
 import { Task } from "../../domain/entities/task.entity";
-import { Prisma, Task as PrismaTask, TaskPriority as PrismaTaskPriority, TaskStatus as PrismaTaskStatus } from "generated/prisma/client";
+import {
+    Prisma,
+    Task as PrismaTask,
+    TaskPriority as PrismaTaskPriority,
+    TaskStatus as PrismaTaskStatus,
+    Tenant as PrismaTenant,
+    User as PrismaUser,
+    TaskAudit as PrismaTaskAudit,
+} from "generated/prisma/client";
+import { UserMapper } from "@/modules/users/infrastructure/mappers/user.mapper";
+import { TaskAuditMapper } from "./task-audit.mapper";
+
+type TaskWithRelations = PrismaTask & {
+    tenant?: PrismaTenant
+    creator?: PrismaUser
+    assignee?: PrismaUser
+    audits?: PrismaTaskAudit[]
+}
 
 export class TaskMapper {
-    static toDomain(prismaTask: PrismaTask): Task {
+    static toDomain(prismaTask: TaskWithRelations): Task {
         return new Task(
             prismaTask.id,
             prismaTask.tenantId,
@@ -16,7 +34,12 @@ export class TaskMapper {
             prismaTask.dueDate,
             prismaTask.assignedTo,
             prismaTask.createdAt,
-            prismaTask.updatedAt
+            prismaTask.updatedAt,
+
+            prismaTask.tenant ? TenantMapper.toDomain(prismaTask.tenant) : null,
+            prismaTask.creator ? UserMapper.toDomain(prismaTask.creator) : null,
+            prismaTask.assignee ? UserMapper.toDomain(prismaTask.assignee) : null,
+            prismaTask.audits ? prismaTask.audits.map(TaskAuditMapper.toDomain) : null
         );
     }
 

@@ -10,7 +10,7 @@ export class MfaBackupCodes {
         public readonly createdAt: Date,
         public readonly updatedAt: Date,
 
-        public readonly user: User
+        public readonly user: User | null = null
     ) {
 
     }
@@ -25,8 +25,7 @@ export class MfaBackupCodes {
             data.code,
             false,
             new Date(),
-            new Date(),
-            null
+            new Date()
         );
     }
 }

@@ -1,4 +1,4 @@
-import { ICommandHandler, QueryHandler } from "@nestjs/cqrs";
+import { CommandHandler, ICommandHandler, QueryHandler } from "@nestjs/cqrs";
 import { MfaChallengeCommand } from "../commands/mfa-challenge.command";
 import { UserRepositoryPort } from "../../../users/domain/ports/user.repository.port";
 import { UnauthorizedException } from "@nestjs/common";
@@ -9,6 +9,7 @@ import { User } from "@/modules/users/domain/entities/user.entity";
 import { RefreshToken } from "../../domain/entities/refresh-token.entity";
 import { MfaValidatorPort } from "../../domain/ports/mfa-validator.port";
 
+@CommandHandler(MfaChallengeCommand)
 export class MfaChallengeHandler implements ICommandHandler<MfaChallengeCommand, LoginResDto> {
     constructor(
         private readonly userRepository: UserRepositoryPort,

@@ -1,6 +1,9 @@
 import { randomUUID } from "crypto";
 import { TaskPriority } from "./enums/task-priority.enum";
 import { TaskStatus } from "./enums/task-status.enum";
+import { Tenant } from "@/modules/tenants/domain/entities/tenant.entity";
+import { User } from "@/modules/users/domain/entities/user.entity";
+import { TaskAudit } from "./task-audit.entity";
 
 export class Task {
     constructor(
@@ -14,7 +17,12 @@ export class Task {
         public readonly dueDate: Date | null,
         public readonly assignedTo: string | null,
         public readonly createdAt: Date,
-        public readonly updatedAt: Date
+        public readonly updatedAt: Date,
+
+        public readonly tenant: Tenant | null = null,
+        public readonly creator: User | null = null,
+        public readonly assignee: User | null = null,
+        public readonly audits: TaskAudit[] | null = null,
     ) { }
 
     static async create(data: {

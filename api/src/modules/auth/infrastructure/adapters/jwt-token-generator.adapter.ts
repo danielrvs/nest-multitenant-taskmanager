@@ -21,7 +21,7 @@ export class JwtTokenGeneratorAdapter implements TokenGeneratorPort {
             role: user.role,
             isMfaPending: false
         }
-        console.log(payload);
+
         const accessToken = this.jwtService.sign(payload, { expiresIn: '3600s' });
         const refreshToken = this.jwtService.sign(
             { userId: user.id, jti: randomUUID() },

@@ -47,8 +47,31 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
         })
     }
 
+    async findByIdWithTenant(id: string): Promise<User | null> {
+        return await this.handleDbOperation(async () => {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    id
+                },
+                include: {
+                    tenant: true
+                }
+            })
+
+            return user ? UserMapper.toDomain(user) : null;
+        })
+    }
+
     async update(id: string, data: Partial<User>): Promise<User> {
-        throw new Error("Method not implemented.");
+        return await this.handleDbOperation(async () => {
+            const updatedUser = await this.prisma.user.update({
+                where: {
+                    id
+                },
+                data: UserMapper.toUpdateInput(data)
+            })
+            return UserMapper.toDomain(updatedUser);
+        })
     }
     async delete(id: string): Promise<void> {
         throw new Error("Method not implemented.");

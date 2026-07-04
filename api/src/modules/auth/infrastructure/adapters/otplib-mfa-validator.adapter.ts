@@ -1,11 +1,12 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { MfaValidatorPort } from "../../domain/ports/mfa-validator.port";
 import { Cache } from "cache-manager";
 import { verify } from "otplib";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
 
 @Injectable()
 export class OtplibMfaValidatorAdapter implements MfaValidatorPort {
-    constructor(private readonly cacheManager: Cache) { }
+    constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) { }
 
     async validate(mfaSecret: string, mfaToken: string): Promise<boolean> {
         const isValid = await verify({ token: mfaToken, secret: mfaSecret });

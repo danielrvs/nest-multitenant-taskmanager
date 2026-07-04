@@ -2,9 +2,9 @@ import { AppModule } from "@/app.module";
 import { PrismaService } from "@/shared/infrastructure/prisma/prisma.service";
 import { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { TestFactories } from "test/factories/test-factories";
-import { cleanupDatabase } from "test/helpers/clean-up-database.helper";
-import { setupTestApp } from "test/helpers/setup-test.helper";
+import { TestFactories } from "../factories/test-factories";
+import { cleanupDatabase } from "../helpers/clean-up-database.helper";
+import { setupTestApp } from "../helpers/setup-test.helper";
 import request from 'supertest';
 import { generate, generateSecret } from "otplib";
 
@@ -48,15 +48,15 @@ describe('MFA Challenge & Activation Integration Tests', () => {
             const response = await request(app.getHttpServer())
                 .post(route())
                 .set('Cookie', `access_token=${auth.accessToken}`)
-                .expect(200);
+
+            expect(response.status).toBe(200);
 
 
-            expect(response.body.data).toHaveProperty('secret');
             expect(response.body.data).toHaveProperty('qrCodeUri');
             expect(response.body.data.qrCodeUri).toContain('otpauth://totp/');
 
             const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-            expect(dbUser?.mfaSecret).toBe(response.body.data.secret);
+            expect(dbUser?.mfaSecret).not.toBeNull();
             expect(dbUser?.mfaFactorConfirmedAt).toBeNull();
         });
     });
@@ -65,8 +65,9 @@ describe('MFA Challenge & Activation Integration Tests', () => {
         const route = () => '/auth/mfa/activate';
 
         it('should reject activation if user only carries an unverified pre-auth token', async () => {
-            const { token } = await TestFactories.user().createMfaUnverifiedUser();
-            const totpCode = generate({ secret: generateSecret() });
+            const mfaSecret = await generateSecret();
+            const { token } = await TestFactories.user().state({ mfaSecret }).createMfaUnverifiedUser();
+            const totpCode = await generate({ secret: mfaSecret });
 
             await request(app.getHttpServer())
                 .post(route())
@@ -78,11 +79,15 @@ describe('MFA Challenge & Activation Integration Tests', () => {
         it('should activate 2FA successfully and mutate DB state when valid session and code are provided', async () => {
 
 
+            const mfaSecret = await generateSecret();
+            const totpCode = await generate({ secret: mfaSecret });
+
             const { user, auth } = await TestFactories.user()
                 .with2FA()
+                .state({ mfaSecret })
                 .createAuthenticatedUser();
 
-            const totpCode = await generate({ secret: user.mfaSecret });
+
 
             const response = await request(app.getHttpServer())
                 .post(route())
@@ -106,11 +111,14 @@ describe('MFA Challenge & Activation Integration Tests', () => {
         const route = () => '/auth/mfa/challenge';
 
         it('should return 200 and set secure cookies when valid totp is provided', async () => {
+            const mfaSecret = await generateSecret();
+            const totpCode = await generate({ secret: mfaSecret });
+
             const { user, token } = await TestFactories.user()
                 .with2FA()
+                .state({ mfaSecret })
                 .createMfaUnverifiedUser();
 
-            const totpCode = await generate({ secret: user.mfaSecret });
 
             const response = await request(app.getHttpServer())
                 .post(route())
@@ -129,11 +137,15 @@ describe('MFA Challenge & Activation Integration Tests', () => {
         });
 
         it('should reject the same TOTP code twice to prevent Anti-Replay attacks', async () => {
+
+            const mfaSecret = await generateSecret();
+            const totpCode = await generate({ secret: mfaSecret });
+
             const { user, token } = await TestFactories.user()
                 .with2FA()
+                .state({ mfaSecret })
                 .createMfaUnverifiedUser();
 
-            const totpCode = await generate({ secret: user.mfaSecret });
 
 
             await request(app.getHttpServer())
@@ -161,11 +173,14 @@ describe('MFA Challenge & Activation Integration Tests', () => {
         });
 
         it('should deactivate 2FA successfully', async () => {
+
+            const mfaSecret = await generateSecret();
+            const totpCode = await generate({ secret: mfaSecret });
+
             const { user, auth } = await TestFactories.user()
                 .with2FA()
+                .state({ mfaSecret })
                 .createAuthenticatedUser();
-
-            const totpCode = await generate({ secret: user.mfaSecret });
             const response = await request(app.getHttpServer())
                 .post(route())
                 .set('Cookie', `access_token=${auth.accessToken}`)

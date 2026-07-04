@@ -12,22 +12,22 @@ export class User {
     constructor(
         public readonly id: string,
         public readonly tenantId: string,
-        public readonly name: string,
-        public readonly email: Email,
-        public readonly password: PasswordHash,
-        public readonly role: UserRole,
-        public readonly mfaSecret: string | null,
-        public readonly mfaRecoveryCodes: string | null,
-        public readonly mfaFactorConfirmedAt: Date | null,
+        public name: string,
+        public email: Email,
+        public password: PasswordHash,
+        public role: UserRole,
+        public mfaSecret: string | null,
+        public mfaRecoveryCodes: string | null,
+        public mfaFactorConfirmedAt: Date | null,
         public readonly createdAt: Date,
-        public readonly updatedAt: Date,
+        public updatedAt: Date,
 
-        public readonly tenant: Tenant | null = null,
-        public readonly createdTasks: Task[] | null = null,
-        public readonly assignedTasks: Task[] | null = null,
-        public readonly taskAudits: TaskAudit[] | null = null,
-        public readonly refreshTokens: RefreshToken[] | null = null,
-        public readonly mfaBackupCodes: MfaBackupCodes[] | null = null
+        public tenant: Tenant | null = null,
+        public createdTasks: Task[] | null = null,
+        public assignedTasks: Task[] | null = null,
+        public taskAudits: TaskAudit[] | null = null,
+        public refreshTokens: RefreshToken[] | null = null,
+        public mfaBackupCodes: MfaBackupCodes[] | null = null
     ) {
 
     }
@@ -56,6 +56,10 @@ export class User {
             now,
             now,
         )
+    }
+
+    setMfaSecret(secret: string): void {
+        this.mfaSecret = secret;
     }
 
 }

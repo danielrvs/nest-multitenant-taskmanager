@@ -60,15 +60,15 @@ export class UserMapper {
         };
     }
 
-    static toUpdateInput(user: User): Prisma.UserUpdateInput {
+    static toUpdateInput(user: Partial<User>): Prisma.UserUpdateInput {
         return {
-            name: user.name,
-            email: user.email.toString(),
-            password: user.password.toString() ?? undefined,
-            role: user.role as PrismaUserRole,
-            mfaSecret: user.mfaSecret,
-            mfaRecoveryCodes: user.mfaRecoveryCodes,
-            mfaFactorConfirmedAt: user.mfaFactorConfirmedAt
+            name: user.name ?? undefined,
+            email: user.email?.toString() ?? undefined,
+            password: user.password?.toString() ?? undefined,
+            role: user.role as PrismaUserRole ?? undefined,
+            mfaSecret: user.mfaSecret ?? undefined,
+            mfaRecoveryCodes: user.mfaRecoveryCodes ?? undefined,
+            mfaFactorConfirmedAt: user.mfaFactorConfirmedAt ?? undefined
         };
     }
 
