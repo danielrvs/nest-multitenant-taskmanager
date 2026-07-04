@@ -58,6 +58,19 @@ export class UserMapper {
         };
     }
 
+    static toCreateManyInput(user: User): Prisma.UserCreateManyInput {
+        return {
+            id: user.id ?? undefined,
+            tenantId: user.tenantId,
+            name: user.name,
+            email: user.email.toString(),
+            password: user.password.toString(),
+            mfaSecret: user.mfaSecret,
+            mfaFactorConfirmedAt: user.mfaFactorConfirmedAt,
+            role: user.role as PrismaUserRole
+        }
+    }
+
     static toUpdateInput(user: User): Prisma.UserUpdateInput {
         return {
             name: user.name,

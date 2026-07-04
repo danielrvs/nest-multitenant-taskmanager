@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler, QueryHandler } from "@nestjs/cqrs";
 import { MfaChallengeCommand } from "../commands/mfa-challenge.command";
 import { UserRepositoryPort } from "../../../users/domain/ports/user.repository.port";
-import { UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, UnauthorizedException } from "@nestjs/common";
 import { LoginResDto } from "../dtos/login.res.dto";
 import { TokenGeneratorPort, TokenPayload } from "../../domain/ports/token-generator.port";
 import { RefreshTokenRepositoryPort } from "../../domain/ports/refresh-token.repository.port";
@@ -24,6 +24,8 @@ export class MfaChallengeHandler implements ICommandHandler<MfaChallengeCommand,
 
         const user = await this.userRepository.findById(userId);
         if (!user) throw new UnauthorizedException("Invalid credentials");
+
+        if (!user.isMFAEnabled()) throw new UnauthorizedException("MFA is not enabled");
 
         const isMfaCodeValid = await this.mfaValidator.validate(user.mfaSecret, totpCode);
         if (!isMfaCodeValid) throw new UnauthorizedException("Invalid MFA code");

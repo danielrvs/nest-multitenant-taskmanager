@@ -15,7 +15,7 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
     }
 
     async create(entity: User): Promise<User> {
-        return this.handleDbOperation(async () => {
+        return await this.handleDbOperation(async () => {
             const savedUser = await this.prisma.user.create({
                 data: UserMapper.toCreateInput(entity)
             });
@@ -23,7 +23,12 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
         })
     }
     async createMany(entities: User[]): Promise<{ count: number }> {
-        throw new Error("Method not implemented.");
+        return await this.handleDbOperation(async () => {
+            const users = await this.prisma.user.createMany({
+                data: entities.map(UserMapper.toCreateManyInput)
+            });
+            return { count: users.count as number };
+        })
     }
     async findByEmail(email: string): Promise<User | null> {
         return this.handleDbOperation(async () => {
@@ -74,10 +79,23 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
         })
     }
     async delete(id: string): Promise<void> {
-        throw new Error("Method not implemented.");
+        return await this.handleDbOperation(async () => {
+            await this.prisma.user.delete({
+                where: {
+                    id
+                }
+            });
+        })
     }
     async findByTenantId(tenantId: string): Promise<User[]> {
-        throw new Error("Method not implemented.");
+        return await this.handleDbOperation(async () => {
+            const users = await this.prisma.user.findMany({
+                where: {
+                    tenantId
+                }
+            });
+            return users.map(UserMapper.toDomain);
+        })
     }
 
     async findRandomByTenantId(tenantId: string): Promise<User | null> {
