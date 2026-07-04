@@ -9,8 +9,8 @@ export class OtplibMfaValidatorAdapter implements MfaValidatorPort {
     constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) { }
 
     async validate(mfaSecret: string, mfaToken: string): Promise<boolean> {
-        const isValid = await verify({ token: mfaToken, secret: mfaSecret });
-        if (!isValid) return false;
+        const verified = await verify({ token: mfaToken, secret: mfaSecret });
+        if (!verified.valid) return false;
 
         const cacheKey = `mfa:used:${mfaSecret}:${mfaToken}`;
         const used = await this.cacheManager.get(cacheKey);

@@ -11,26 +11,74 @@ export class PrismaMfaBackupCodesRepository extends PrismaBaseRepository impleme
     constructor(public readonly prisma: PrismaService) { super() }
 
     async create(data: MfaBackupCodes): Promise<MfaBackupCodes> {
-        throw new Error("Method not implemented.");
+        return await this.handleDbOperation(async () => {
+            const result = await this.prisma.mfaBackupCodes.create({
+                data: MfaBackupCodesMapper.toCreateInput(data)
+            });
+            return MfaBackupCodesMapper.toDomain(result);
+        })
     }
 
     async createMany(data: MfaBackupCodes[]): Promise<{ count: number }> {
-        throw new Error("Method not implemented.");
+        return await this.handleDbOperation(async () => {
+            const result = await this.prisma.mfaBackupCodes.createMany({
+                data: data.map(MfaBackupCodesMapper.toCreateManyInput)
+            });
+            return result;
+        })
     }
 
     async findByCode(code: string): Promise<MfaBackupCodes | null> {
-        throw new Error("Method not implemented.");
+        return await this.handleDbOperation(async () => {
+            const result = await this.prisma.mfaBackupCodes.findUnique({
+                where: {
+                    code: code
+                }
+            });
+            return result ? MfaBackupCodesMapper.toDomain(result) : null;
+        })
     }
 
     async findByUserId(userId: string): Promise<MfaBackupCodes[] | null> {
-        throw new Error("Method not implemented.");
+        return await this.handleDbOperation(async () => {
+            const result = await this.prisma.mfaBackupCodes.findMany({
+                where: {
+                    userId: userId
+                }
+            });
+            return result.map(MfaBackupCodesMapper.toDomain);
+        })
     }
 
     async delete(id: string): Promise<void> {
-        throw new Error("Method not implemented.");
+        await this.handleDbOperation(async () => {
+            await this.prisma.mfaBackupCodes.delete({
+                where: {
+                    id: id
+                }
+            });
+        });
     }
 
     async update(id: string, data: Partial<MfaBackupCodes>): Promise<MfaBackupCodes> {
-        throw new Error("Method not implemented.");
+        return await this.handleDbOperation(async () => {
+            const result = await this.prisma.mfaBackupCodes.update({
+                where: {
+                    id: id
+                },
+                data: MfaBackupCodesMapper.toUpdateInput(data)
+            });
+            return MfaBackupCodesMapper.toDomain(result);
+        })
+    }
+
+    async deleteByUserId(userId: string): Promise<void> {
+        await this.handleDbOperation(async () => {
+            await this.prisma.mfaBackupCodes.deleteMany({
+                where: {
+                    userId: userId
+                }
+            });
+        });
     }
 }

@@ -8,4 +8,5 @@ export abstract class MfaBackupCodesRepositoryPort implements IsFactoryRepositor
     abstract findByUserId(userId: string): Promise<MfaBackupCodes[] | null>;
     abstract delete(id: string): Promise<void>;
     abstract update(id: string, data: Partial<MfaBackupCodes>): Promise<MfaBackupCodes>;
+    abstract deleteByUserId(userId: string): Promise<void>;
 }

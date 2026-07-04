@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsString, Length } from "class-validator";
 
-export class MfaChallengeReqDto {
+export class MfaDeactivateReqDto {
     @ApiProperty({
         description: 'The TOTP code to verify',
         example: '123456',

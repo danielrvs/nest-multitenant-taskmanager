@@ -29,7 +29,6 @@ export class UserMapper {
             PasswordHash.fromHash(prismaUser.password),
             prismaUser.role as UserRole,
             prismaUser.mfaSecret,
-            prismaUser.mfaRecoveryCodes,
             prismaUser.mfaFactorConfirmedAt,
             prismaUser.createdAt,
             prismaUser.updatedAt,
@@ -54,21 +53,19 @@ export class UserMapper {
             email: user.email.toString(),
             password: user.password.toString(),
             mfaSecret: user.mfaSecret,
-            mfaRecoveryCodes: user.mfaRecoveryCodes,
             mfaFactorConfirmedAt: user.mfaFactorConfirmedAt,
             role: user.role as PrismaUserRole,
         };
     }
 
-    static toUpdateInput(user: Partial<User>): Prisma.UserUpdateInput {
+    static toUpdateInput(user: User): Prisma.UserUpdateInput {
         return {
-            name: user.name ?? undefined,
-            email: user.email?.toString() ?? undefined,
-            password: user.password?.toString() ?? undefined,
-            role: user.role as PrismaUserRole ?? undefined,
-            mfaSecret: user.mfaSecret ?? undefined,
-            mfaRecoveryCodes: user.mfaRecoveryCodes ?? undefined,
-            mfaFactorConfirmedAt: user.mfaFactorConfirmedAt ?? undefined
+            name: user.name,
+            email: user.email.toString(),
+            password: user.password.toString(),
+            role: user.role as PrismaUserRole,
+            mfaSecret: user.mfaSecret,
+            mfaFactorConfirmedAt: user.mfaFactorConfirmedAt
         };
     }
 

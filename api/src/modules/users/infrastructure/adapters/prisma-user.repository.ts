@@ -62,7 +62,7 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
         })
     }
 
-    async update(id: string, data: Partial<User>): Promise<User> {
+    async update(id: string, data: User): Promise<User> {
         return await this.handleDbOperation(async () => {
             const updatedUser = await this.prisma.user.update({
                 where: {

@@ -50,7 +50,6 @@ model User {
   password             String    @db.VarChar(255)
   role                 UserRole  @default(VIEWER)
   mfaSecret            String?   @map("mfa_secret") @db.Text
-  mfaRecoveryCodes     String?   @map("mfa_recovery_codes") @db.Text
   mfaFactorConfirmedAt DateTime? @map("mfa_factor_confirmed_at")
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")

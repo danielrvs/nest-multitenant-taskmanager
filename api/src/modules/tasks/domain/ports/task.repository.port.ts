@@ -8,6 +8,6 @@ export abstract class TaskRepositoryPort implements IsFactoryRepository<Task> {
     abstract findByUserId(userId: string): Promise<Task[]>;
     abstract findByTenantId(tenantId: string): Promise<Task[]>;
     abstract findByAssignedTo(assignedToId: string): Promise<Task[]>;
-    abstract update(id: string, data: Partial<Task>): Promise<Task>;
+    abstract update(id: string, data: Task): Promise<Task>;
     abstract delete(id: string): Promise<void>;
 }

@@ -34,6 +34,17 @@ export class MfaBackupCodesMapper {
         };
     }
 
+    static toCreateManyInput(entity: MfaBackupCodes): Prisma.MfaBackupCodesCreateManyInput {
+        return {
+            id: entity.id,
+            userId: entity.userId,
+            code: entity.code,
+            used: entity.used,
+            createdAt: entity.createdAt,
+            updatedAt: entity.updatedAt,
+        };
+    }
+
     static toUpdateInput(entity: Partial<MfaBackupCodes>): Prisma.MfaBackupCodesUpdateInput {
         return {
             used: entity.used

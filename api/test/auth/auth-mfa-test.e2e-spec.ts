@@ -73,7 +73,7 @@ describe('MFA Challenge & Activation Integration Tests', () => {
                 .post(route())
                 .set('Cookie', `access_token=${token}`)
                 .send({ totpCode })
-                .expect(403);
+                .expect(401);
         });
 
         it('should activate 2FA successfully and mutate DB state when valid session and code are provided', async () => {
@@ -104,6 +104,21 @@ describe('MFA Challenge & Activation Integration Tests', () => {
             expect(updatedUser?.mfaSecret).toBe(user.mfaSecret);
 
 
+        });
+
+        it('should reject if the provided totp code has not 6 digits', async () => {
+            const mfaSecret = await generateSecret();
+            const totpCode = await generate({ secret: mfaSecret });
+
+            const { user, auth } = await TestFactories.user()
+                .with2FA()
+                .state({ mfaSecret })
+                .createAuthenticatedUser();
+            await request(app.getHttpServer())
+                .post(route())
+                .set('Cookie', `access_token=${auth.accessToken}`)
+                .send({ totpCode: '12345' })
+                .expect(400);
         });
     });
 
@@ -161,6 +176,36 @@ describe('MFA Challenge & Activation Integration Tests', () => {
                 .send({ totpCode })
                 .expect(401);
         });
+
+        it('should reject if the provided totp code is invalid', async () => {
+            const mfaSecret = await generateSecret();
+            const totpCode = await generate({ secret: mfaSecret });
+
+            const { user, token } = await TestFactories.user()
+                .with2FA()
+                .state({ mfaSecret })
+                .createMfaUnverifiedUser();
+            await request(app.getHttpServer())
+                .post(route())
+                .set('Cookie', `access_token=${token}`)
+                .send({ totpCode: '123456' })
+                .expect(401);
+        });
+
+        it('should reject if the provided totp code has not 6 digits', async () => {
+            const mfaSecret = await generateSecret();
+            const totpCode = await generate({ secret: mfaSecret });
+
+            const { user, token } = await TestFactories.user()
+                .with2FA()
+                .state({ mfaSecret })
+                .createMfaUnverifiedUser();
+            await request(app.getHttpServer())
+                .post(route())
+                .set('Cookie', `access_token=${token}`)
+                .send({ totpCode: '12345' })
+                .expect(400);
+        });
     });
 
     describe('POST /auth/mfa/deactivate', () => {
@@ -190,6 +235,52 @@ describe('MFA Challenge & Activation Integration Tests', () => {
             const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
             expect(updatedUser?.mfaSecret).toBeNull();
             expect(updatedUser?.mfaFactorConfirmedAt).toBeNull();
+
+            const mfaBackupCodes = await prisma.mfaBackupCodes.findMany({ where: { userId: user.id } });
+            expect(mfaBackupCodes).toHaveLength(0);
+        });
+
+        it('should reject if 2FA is not activated', async () => {
+            const mfaSecret = await generateSecret();
+            const totpCode = await generate({ secret: mfaSecret });
+
+            const { user, auth } = await TestFactories.user()
+                .createAuthenticatedUser();
+            await request(app.getHttpServer())
+                .post(route())
+                .set('Cookie', `access_token=${auth.accessToken}`)
+                .send({ totpCode })
+                .expect(400);
+        });
+
+        it('should reject if the provided totp code is invalid', async () => {
+            const mfaSecret = await generateSecret();
+            const totpCode = await generate({ secret: mfaSecret });
+
+            const { user, auth } = await TestFactories.user()
+                .with2FA()
+                .state({ mfaSecret })
+                .createAuthenticatedUser();
+            await request(app.getHttpServer())
+                .post(route())
+                .set('Cookie', `access_token=${auth.accessToken}`)
+                .send({ totpCode: '123456' })
+                .expect(401);
+        });
+
+        it('should reject if the provided totp code has not 6 digits', async () => {
+            const mfaSecret = await generateSecret();
+            const totpCode = await generate({ secret: mfaSecret });
+
+            const { user, auth } = await TestFactories.user()
+                .with2FA()
+                .state({ mfaSecret })
+                .createAuthenticatedUser();
+            await request(app.getHttpServer())
+                .post(route())
+                .set('Cookie', `access_token=${auth.accessToken}`)
+                .send({ totpCode: '12345' })
+                .expect(400);
         });
     });
 

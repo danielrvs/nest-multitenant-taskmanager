@@ -21,10 +21,12 @@ import { MfaGeneratorPort } from "./domain/ports/mfa-generator.port";
 import { OtplibMfaGeneratorAdapter } from "./infrastructure/adapters/otplib-mfa-generator.adapter";
 import { MfaBackupCodesRepositoryPort } from "./domain/ports/mfa-backup-codes.repository.port";
 import { PrismaMfaBackupCodesRepository } from "./infrastructure/adapters/prisma-mfa-backup-codes.repository.adapter";
+import { MfaActivateHandler } from "./application/handlers/mfa-activate.handler";
+import { MfaDeactivateHandler } from "./application/handlers/mfa-deactivate.handler";
 
 
 const commandHandlers = [
-    LoginHandler, LogoutHandler, MfaSetupHandler, MfaChallengeHandler
+    LoginHandler, LogoutHandler, MfaSetupHandler, MfaChallengeHandler, MfaActivateHandler, MfaDeactivateHandler
 ]
 const queriesHandlers = []
 

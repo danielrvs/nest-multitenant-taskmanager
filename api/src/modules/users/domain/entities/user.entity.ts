@@ -17,7 +17,6 @@ export class User {
         public password: PasswordHash,
         public role: UserRole,
         public mfaSecret: string | null,
-        public mfaRecoveryCodes: string | null,
         public mfaFactorConfirmedAt: Date | null,
         public readonly createdAt: Date,
         public updatedAt: Date,
@@ -52,7 +51,6 @@ export class User {
             data.role,
             null,
             null,
-            null,
             now,
             now,
         )
@@ -60,6 +58,15 @@ export class User {
 
     setMfaSecret(secret: string): void {
         this.mfaSecret = secret;
+    }
+
+    disableMFA(): void {
+        this.mfaSecret = null;
+        this.mfaFactorConfirmedAt = null;
+    }
+
+    isMFAEnabled(): boolean {
+        return this.mfaFactorConfirmedAt !== null && this.mfaSecret !== null;
     }
 
 }
