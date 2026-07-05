@@ -7,8 +7,8 @@ export class LoginReqDto {
         description: 'Email of the user',
         required: true
     })
-    @IsEmail()
     @IsNotEmpty()
+    @IsEmail()
     email: string;
 
     @ApiProperty({

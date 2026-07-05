@@ -18,6 +18,8 @@ export type UserStateOverride = {
     name?: string;
     email?: string;
     password?: string;
+    passwordResetToken?: string | null;
+    passwordResetExpiresAt?: Date | null;
     role?: UserRole;
     mfaSecret?: string | null;
     mfaFactorConfirmedAt?: Date | null;
@@ -30,6 +32,9 @@ export type PrismaUserData = {
     tenantId: string;
     name: string;
     email: string;
+    password: string;
+    passwordResetToken: string | null;
+    passwordResetExpiresAt: Date | null;
     role: PrismaUserRole;
     mfaSecret: string | null;
     mfaFactorConfirmedAt: Date | null;
@@ -56,6 +61,8 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
             name: faker.person.firstName(),
             email: faker.internet.email(),
             password: faker.internet.password(),
+            passwordResetToken: null,
+            passwordResetExpiresAt: null,
             role: faker.helpers.arrayElement([UserRole.ADMIN, UserRole.MANAGER, UserRole.VIEWER]),
             mfaSecret: null,
             mfaFactorConfirmedAt: null,
@@ -73,6 +80,8 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
             def.name,
             Email.create(def.email),
             password,
+            null,
+            null,
             def.role,
             def.mfaSecret,
             def.mfaFactorConfirmedAt,
@@ -101,6 +110,19 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
         const auth = await this.tokenGenerator.generateToken(user);
 
         return { user, auth };
+    }
+
+    public withPasswordResetToken(token: string | null = null, expiresAt: Date | null = null): UserFactoryBuilder {
+        if (!token) {
+            token = faker.string.alphanumeric(8);
+        }
+
+        if (!expiresAt) {
+            expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour from now
+        }
+
+        this.state({ passwordResetToken: token, passwordResetExpiresAt: expiresAt });
+        return this;
     }
 
 

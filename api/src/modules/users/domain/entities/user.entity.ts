@@ -15,6 +15,8 @@ export class User {
         public name: string,
         public email: Email,
         public password: PasswordHash,
+        public passwordResetToken: PasswordHash | null,
+        public passwordResetExpiresAt: Date | null,
         public role: UserRole,
         public mfaSecret: string | null,
         public mfaFactorConfirmedAt: Date | null,
@@ -48,6 +50,8 @@ export class User {
             data.name,
             emailVo,
             passwordHashVo,
+            null,
+            null,
             data.role,
             null,
             null,
@@ -71,6 +75,11 @@ export class User {
 
     isMFAEnabled(): boolean {
         return this.mfaFactorConfirmedAt !== null && this.mfaSecret !== null;
+    }
+
+    async requestPasswordReset(token: string, expiresAt: Date): Promise<void> {
+        this.passwordResetToken = await PasswordHash.create(token);
+        this.passwordResetExpiresAt = expiresAt;
     }
 
 }

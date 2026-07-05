@@ -43,16 +43,18 @@ model Tenant {
 }
 
 model User {
-  id                   String    @id @default(cuid())
-  tenantId             String    @map("tenant_id")
-  name                 String    @db.VarChar(255)
-  email                String    @unique @db.VarChar(255)
-  password             String    @db.VarChar(255)
-  role                 UserRole  @default(VIEWER)
-  mfaSecret            String?   @map("mfa_secret") @db.Text
-  mfaFactorConfirmedAt DateTime? @map("mfa_factor_confirmed_at")
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
+  id                     String    @id @default(cuid())
+  tenantId               String    @map("tenant_id")
+  name                   String    @db.VarChar(255)
+  email                  String    @unique @db.VarChar(255)
+  password               String    @db.VarChar(255)
+  passwordResetToken     String?   @map("password_reset_token") @db.VarChar(255)
+  passwordResetExpiresAt DateTime? @map("password_reset_expires_at")
+  role                   UserRole  @default(VIEWER)
+  mfaSecret              String?   @map("mfa_secret") @db.Text
+  mfaFactorConfirmedAt   DateTime? @map("mfa_factor_confirmed_at")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
 
   tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   createdTasks   Task[]           @relation("CreatedTasks")

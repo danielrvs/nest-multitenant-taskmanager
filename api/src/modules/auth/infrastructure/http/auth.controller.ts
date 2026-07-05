@@ -15,6 +15,10 @@ import { ConfigService } from "@nestjs/config";
 import { RegisterResDto } from "../../application/dtos/register.res.dto";
 import { RegisterReqDto } from "../../application/dtos/register.req.dto";
 import { RegisterCommand } from "../../application/commands/register.command";
+import { ForgotPasswordCommand } from "../../application/commands/forgot-password.command";
+import { ResetPasswordCommand } from "../../application/commands/reset-password.command";
+import { ResetPasswordReqDto } from "../../application/dtos/reset-password.req.dto";
+import { ForgotPasswordReqDto } from "../../application/dtos/forgot-password.req.dto";
 
 
 @Controller('auth')
@@ -101,6 +105,24 @@ export class AuthController {
         const command = new RegisterCommand(dto.name, dto.email, dto.password, dto.tenantId);
         const result = await this.commandBus.execute<RegisterCommand, RegisterResDto>(command);
         return result;
+    }
+
+    @Post('forgot-password')
+    @Public()
+    @HttpCode(HttpStatus.OK)
+    @ResponseMessage("Password reset request sent successfully")
+    async forgotPassword(@Body() dto: ForgotPasswordReqDto): Promise<void> {
+        const command = new ForgotPasswordCommand(dto.email);
+        await this.commandBus.execute<ForgotPasswordCommand>(command);
+    }
+
+    @Post('reset-password')
+    @Public()
+    @HttpCode(HttpStatus.OK)
+    @ResponseMessage("Password reset successfully")
+    async resetPassword(@Body() dto: ResetPasswordReqDto): Promise<void> {
+        const command = new ResetPasswordCommand(dto.token, dto.password);
+        await this.commandBus.execute<ResetPasswordCommand>(command);
     }
 
 }

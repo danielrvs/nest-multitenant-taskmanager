@@ -6,7 +6,7 @@ import { TestFactories } from "../factories/test-factories";
 import { cleanupDatabase } from "../helpers/clean-up-database.helper";
 import { setupTestApp } from "../helpers/setup-test.helper";
 import { PrismaService } from '@/shared/infrastructure/prisma/prisma.service';
-import { faker } from "@faker-js/faker";
+import { faker } from '@faker-js/faker';
 
 describe('Password Reset E2E Tests', () => {
     let app: INestApplication;
@@ -43,7 +43,7 @@ describe('Password Reset E2E Tests', () => {
                 .send({ email: user.email.toString() });
 
             expect([200, 201]).toContain(response.status);
-            
+
             // Check that a token was generated in the database
             const dbUser = await prisma.user.findUnique({ where: { id: user.id } }) as any;
             let token = dbUser.passwordResetToken || dbUser.resetToken;
@@ -78,25 +78,10 @@ describe('Password Reset E2E Tests', () => {
     describe('POST /auth/reset-password', () => {
         it('should successfully reset password with valid token and allow login with new password', async () => {
             const password = 'OldPassword123!';
+            const token = faker.string.alphanumeric(8);
+
             const newPassword = 'NewPassword123!';
-            const user = await TestFactories.user().state({ password }).create();
-
-            // Request reset
-            await request(app.getHttpServer())
-                .post('/auth/forgot-password')
-                .send({ email: user.email.toString() });
-
-            // Retrieve token from database
-            const dbUser = await prisma.user.findUnique({ where: { id: user.id } }) as any;
-            let token = dbUser.passwordResetToken || dbUser.resetToken;
-            if (!token) {
-                const tokenRecord = await (prisma as any).passwordResetToken?.findFirst({
-                    where: { userId: user.id }
-                });
-                token = tokenRecord?.token;
-            }
-
-            expect(token).toBeDefined();
+            const user = await TestFactories.user().state({ password }).withPasswordResetToken(token).create();
 
             // Reset password
             const resetResponse = await request(app.getHttpServer())
@@ -129,30 +114,9 @@ describe('Password Reset E2E Tests', () => {
         });
 
         it('should reject password reset if token is expired', async () => {
-            const user = await TestFactories.user().create();
-            
-            try {
-                const expiresAt = new Date(Date.now() - 3600 * 1000); // 1 hour ago
-                if ('passwordResetToken' in (prisma.user as any)) {
-                    await (prisma.user as any).update({
-                        where: { id: user.id },
-                        data: {
-                            passwordResetToken: 'expired-token-val',
-                            passwordResetExpiresAt: expiresAt
-                        }
-                    });
-                } else if ('passwordResetToken' in prisma) {
-                    await (prisma as any).passwordResetToken.create({
-                        data: {
-                            token: 'expired-token-val',
-                            userId: user.id,
-                            expiresAt
-                        }
-                    });
-                }
-            } catch (err) {
-                // Ignore error if schema doesn't exist yet
-            }
+            const user = await TestFactories.user().withPasswordResetToken().create();
+
+
 
             const response = await request(app.getHttpServer())
                 .post('/auth/reset-password')

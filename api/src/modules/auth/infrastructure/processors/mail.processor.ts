@@ -13,5 +13,8 @@ export class MailProcessor extends WorkerHost {
         if (job.name === 'send-welcome') {
             await this.mailer.sendWelcomeEmail(job.data.tenantId, job.data.email, job.data.name)
         }
+        if (job.name === 'forgot-password') {
+            await this.mailer.sendForgotPasswordEmail(job.data.user, job.data.token)
+        }
     }
 }

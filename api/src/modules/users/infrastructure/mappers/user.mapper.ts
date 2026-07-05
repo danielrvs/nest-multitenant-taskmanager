@@ -27,6 +27,8 @@ export class UserMapper {
             prismaUser.name,
             Email.create(prismaUser.email),
             PasswordHash.fromHash(prismaUser.password),
+            prismaUser.passwordResetToken ? PasswordHash.fromHash(prismaUser.passwordResetToken) : null,
+            prismaUser.passwordResetExpiresAt,
             prismaUser.role as UserRole,
             prismaUser.mfaSecret,
             prismaUser.mfaFactorConfirmedAt,
@@ -76,6 +78,8 @@ export class UserMapper {
             name: user.name,
             email: user.email.toString(),
             password: user.password.toString(),
+            passwordResetToken: user.passwordResetToken?.toString() ?? null,
+            passwordResetExpiresAt: user.passwordResetExpiresAt,
             role: user.role as PrismaUserRole,
             mfaSecret: user.mfaSecret,
             mfaFactorConfirmedAt: user.mfaFactorConfirmedAt
