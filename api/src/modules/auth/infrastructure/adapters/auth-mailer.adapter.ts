@@ -6,11 +6,11 @@ export class AuthMailerAdapter implements MailerPort {
         console.log('Sending welcome email to ' + to + ' with name ' + name)
     }
 
-    async sendForgotPasswordEmail(user: User, token: string): Promise<void> {
-        console.log('Sending forgot password email to ' + user.email.toString() + ' with name ' + user.name)
+    async sendForgotPasswordEmail(email: string, name: string, tenantId: string, userId: string, token: string): Promise<void> {
+        console.log('Sending forgot password email to ' + email + ' with name ' + name + ' and token ' + token)
     }
 
-    async sendResetPasswordEmail(user: User): Promise<void> {
-        console.log('Sending reset password email to ' + user.email.toString() + ' with name ' + user.name)
+    async sendResetPasswordEmail(email: string, name: string, tenantId: string, userId: string): Promise<void> {
+        console.log('Sending reset password email to ' + email + ' with name ' + name)
     }
 }

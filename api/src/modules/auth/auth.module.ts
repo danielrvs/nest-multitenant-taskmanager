@@ -30,6 +30,9 @@ import { ForgotPasswordEventHandler } from "./application/events/forgot-password
 import { UserRegisteredEventHandler } from "./application/events/user-registered.event-handler";
 import { ResetPasswordEventHandler } from "./application/events/reset-password.event-handler";
 import { ResetPasswordHandler } from "./application/handlers/reset-password.handler";
+import { MailProcessor } from "./infrastructure/processors/mail.processor";
+import { MailerPort } from "./domain/ports/mailer.port";
+import { AuthMailerAdapter } from "./infrastructure/adapters/auth-mailer.adapter";
 
 
 const commandHandlers = [
@@ -57,6 +60,11 @@ const eventsHandler = [ForgotPasswordEventHandler, UserRegisteredEventHandler, R
         UserModule],
     controllers: [AuthController, MfaController],
     providers: [...commandHandlers, ...queriesHandlers, ...eventsHandler,
+        MailProcessor,
+    {
+        provide: MailerPort,
+        useClass: AuthMailerAdapter
+    },
     {
         provide: RefreshTokenRepositoryPort,
         useClass: PrismaRefreshTokenRepository

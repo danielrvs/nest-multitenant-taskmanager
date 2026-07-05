@@ -11,7 +11,10 @@ export class ResetPasswordEventHandler implements IEventHandler<ResetPasswordEve
 
     async handle(event: ResetPasswordEvent): Promise<void> {
         await this.emailQueue.add('reset-password', {
-            user: event.user,
+            email: event.user.email.toString(),
+            name: event.user.name,
+            tenantId: event.user.tenantId,
+            userId: event.user.id,
         }, {
             attempts: 3,
             backoff: { type: 'exponential', delay: 1500 },

@@ -11,8 +11,11 @@ export class ForgotPasswordEventHandler implements IEventHandler<ForgotPasswordE
 
     async handle(event: ForgotPasswordEvent): Promise<void> {
         await this.emailQueue.add('forgot-password', {
-            user: event.user,
+            email: event.user.email.toString(),
+            name: event.user.name,
             token: event.token,
+            tenantId: event.user.tenantId,
+            userId: event.user.id,
         }, {
             attempts: 3,
             backoff: { type: 'exponential', delay: 1500 },
