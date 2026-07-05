@@ -21,5 +21,6 @@ export class ForgotPasswordHandler implements ICommandHandler<ForgotPasswordComm
         await this.userRepository.update(user.id, user);
 
         this.eventBus.publish(new ForgotPasswordEvent(user, token));
+        //TODO: outbox pattern, but too long for a demo project :( 
     }
 }

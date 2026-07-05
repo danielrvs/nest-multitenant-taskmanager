@@ -7,19 +7,33 @@ import { cleanupDatabase } from "../helpers/clean-up-database.helper";
 import { setupTestApp } from "../helpers/setup-test.helper";
 import { PrismaService } from '@/shared/infrastructure/prisma/prisma.service';
 import { faker } from '@faker-js/faker';
+import { EventBus } from '@nestjs/cqrs';
+import { ForgotPasswordEvent } from "@/modules/auth/domain/events/forgot-password.event";
+import { ResetPasswordEvent } from "@/modules/auth/domain/events/reset-password.event";
+import { MailerPort } from "@/modules/auth/domain/ports/mailer.port";
 
 describe('Password Reset E2E Tests', () => {
     let app: INestApplication;
     let prisma: PrismaService;
+    let eventBus: EventBus;
+    let publishSpy: jest.SpyInstance;
 
     beforeAll(async () => {
         const moduleFixture = await Test.createTestingModule({
             imports: [AppModule]
-        }).compile();
+        })
+        .overrideProvider(MailerPort)
+        .useValue({
+            sendWelcomeEmail: jest.fn(),
+            sendForgotPasswordEmail: jest.fn(),
+            sendResetPasswordEmail: jest.fn(),
+        })
+        .compile();
 
         app = moduleFixture.createNestApplication();
         setupTestApp(app);
         prisma = app.get(PrismaService);
+        eventBus = app.get(EventBus);
 
         TestFactories.init(app);
         await app.init();
@@ -27,6 +41,11 @@ describe('Password Reset E2E Tests', () => {
 
     beforeEach(async () => {
         await cleanupDatabase(prisma);
+        publishSpy = jest.spyOn(eventBus, 'publish');
+    });
+
+    afterEach(() => {
+        publishSpy.mockRestore();
     });
 
     afterAll(async () => {
@@ -47,6 +66,9 @@ describe('Password Reset E2E Tests', () => {
             const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
             expect(dbUser?.passwordResetToken).not.toBeNull();
             expect(typeof dbUser?.passwordResetToken).toBe('string');
+
+            // Assert domain event was published
+            expect(publishSpy).toHaveBeenCalledWith(expect.any(ForgotPasswordEvent));
         });
 
         it('should return 400 when email is malformed', async () => {
@@ -80,6 +102,9 @@ describe('Password Reset E2E Tests', () => {
                 .send({ token, password: newPassword, email: user.email.toString() });
 
             expect([200, 201]).toContain(resetResponse.status);
+
+            // Assert domain event was published
+            expect(publishSpy).toHaveBeenCalledWith(expect.any(ResetPasswordEvent));
 
             // Verify old password no longer works
             const oldLoginResponse = await request(app.getHttpServer())

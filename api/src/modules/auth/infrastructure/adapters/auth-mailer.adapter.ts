@@ -1,4 +1,4 @@
-import { User } from "@/modules/users/domain/entities/user.entity";
+
 import { MailerPort } from "../../domain/ports/mailer.port";
 
 export class AuthMailerAdapter implements MailerPort {
