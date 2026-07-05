@@ -25,12 +25,16 @@ import { MfaActivateHandler } from "./application/handlers/mfa-activate.handler"
 import { MfaDeactivateHandler } from "./application/handlers/mfa-deactivate.handler";
 import { RegisterHandler } from "./application/handlers/register.handler";
 import { BullModule } from "@nestjs/bullmq";
+import { ForgotPasswordHandler } from "./application/handlers/forgot-password.handler";
+import { ForgotPasswordEventHandler } from "./application/events/forgot-password.event-handler";
+import { UserRegisteredEventHandler } from "./application/events/user-registered.event-handler";
 
 
 const commandHandlers = [
-    LoginHandler, LogoutHandler, MfaSetupHandler, MfaChallengeHandler, MfaActivateHandler, MfaDeactivateHandler, RegisterHandler
+    LoginHandler, LogoutHandler, MfaSetupHandler, MfaChallengeHandler, MfaActivateHandler, MfaDeactivateHandler, RegisterHandler, ForgotPasswordHandler
 ]
 const queriesHandlers = []
+const eventsHandler = [ForgotPasswordEventHandler, UserRegisteredEventHandler]
 
 @Module({
     imports: [
@@ -50,7 +54,7 @@ const queriesHandlers = []
         PassportModule,
         UserModule],
     controllers: [AuthController, MfaController],
-    providers: [...commandHandlers, ...queriesHandlers,
+    providers: [...commandHandlers, ...queriesHandlers, ...eventsHandler,
     {
         provide: RefreshTokenRepositoryPort,
         useClass: PrismaRefreshTokenRepository

@@ -20,7 +20,7 @@ export class ForgotPasswordHandler implements ICommandHandler<ForgotPasswordComm
         const token = randomBytes(5).toString('hex')
         const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour from now
 
-        user.requestPasswordReset(token, expiresAt);
+        await user.requestPasswordReset(token, expiresAt);
         await this.userRepository.update(user.id, user);
 
         this.eventBus.publish(new ForgotPasswordEvent(user, token));

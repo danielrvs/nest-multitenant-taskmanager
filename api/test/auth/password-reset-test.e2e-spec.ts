@@ -44,18 +44,9 @@ describe('Password Reset E2E Tests', () => {
 
             expect([200, 201]).toContain(response.status);
 
-            // Check that a token was generated in the database
-            const dbUser = await prisma.user.findUnique({ where: { id: user.id } }) as any;
-            let token = dbUser.passwordResetToken || dbUser.resetToken;
-            if (!token) {
-                const tokenRecord = await (prisma as any).passwordResetToken?.findFirst({
-                    where: { userId: user.id }
-                });
-                token = tokenRecord?.token;
-            }
-
-            expect(token).toBeDefined();
-            expect(typeof token).toBe('string');
+            const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+            expect(dbUser?.passwordResetToken).not.toBeNull();
+            expect(typeof dbUser?.passwordResetToken).toBe('string');
         });
 
         it('should return 400 when email is malformed', async () => {
