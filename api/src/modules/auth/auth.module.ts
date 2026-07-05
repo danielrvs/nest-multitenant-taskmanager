@@ -28,13 +28,15 @@ import { BullModule } from "@nestjs/bullmq";
 import { ForgotPasswordHandler } from "./application/handlers/forgot-password.handler";
 import { ForgotPasswordEventHandler } from "./application/events/forgot-password.event-handler";
 import { UserRegisteredEventHandler } from "./application/events/user-registered.event-handler";
+import { ResetPasswordEventHandler } from "./application/events/reset-password.event-handler";
+import { ResetPasswordHandler } from "./application/handlers/reset-password.handler";
 
 
 const commandHandlers = [
-    LoginHandler, LogoutHandler, MfaSetupHandler, MfaChallengeHandler, MfaActivateHandler, MfaDeactivateHandler, RegisterHandler, ForgotPasswordHandler
+    LoginHandler, LogoutHandler, MfaSetupHandler, MfaChallengeHandler, MfaActivateHandler, MfaDeactivateHandler, RegisterHandler, ForgotPasswordHandler, ResetPasswordHandler
 ]
 const queriesHandlers = []
-const eventsHandler = [ForgotPasswordEventHandler, UserRegisteredEventHandler]
+const eventsHandler = [ForgotPasswordEventHandler, UserRegisteredEventHandler, ResetPasswordEventHandler]
 
 @Module({
     imports: [

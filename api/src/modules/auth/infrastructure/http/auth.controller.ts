@@ -121,7 +121,7 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @ResponseMessage("Password reset successfully")
     async resetPassword(@Body() dto: ResetPasswordReqDto): Promise<void> {
-        const command = new ResetPasswordCommand(dto.token, dto.password);
+        const command = new ResetPasswordCommand(dto.email, dto.token, dto.password);
         await this.commandBus.execute<ResetPasswordCommand>(command);
     }
 

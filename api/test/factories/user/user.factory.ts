@@ -74,14 +74,15 @@ export class UserFactoryBuilder extends BaseFactory<UserStateOverride, User> {
     protected async createEntity(): Promise<User> {
         const def = { ...(await this.defaultDefinition()), ...this.overrides };
         const password = await PasswordHash.create(def.password);
+        const passwordResetToken = def.passwordResetToken ? await PasswordHash.create(def.passwordResetToken) : null;
         return new User(
             def.id,
             def.tenantId,
             def.name,
             Email.create(def.email),
             password,
-            null,
-            null,
+            passwordResetToken,
+            def.passwordResetExpiresAt,
             def.role,
             def.mfaSecret,
             def.mfaFactorConfirmedAt,

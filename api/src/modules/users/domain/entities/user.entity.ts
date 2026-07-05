@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 import { UserRole } from "./enums/user-role.enum";
 import { Email } from "./vo/email.vo";
 import { PasswordHash } from "./vo/password-hash.vo";
@@ -77,9 +77,30 @@ export class User {
         return this.mfaFactorConfirmedAt !== null && this.mfaSecret !== null;
     }
 
-    async requestPasswordReset(token: string, expiresAt: Date): Promise<void> {
+    async requestPasswordReset(): Promise<string> {
+        const token = randomBytes(5).toString('hex');
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
         this.passwordResetToken = await PasswordHash.create(token);
         this.passwordResetExpiresAt = expiresAt;
+        return token;
+    }
+
+    async resetPassword(password: string, token: string): Promise<void> {
+        if (!this.passwordResetToken || !this.passwordResetExpiresAt) {
+            throw new Error('User has no password reset token');
+        }
+
+        if (!await this.passwordResetToken.compare(token)) {
+            throw new Error('Invalid password reset token');
+        }
+        if (this.passwordResetExpiresAt < new Date()) {
+            throw new Error('Password reset token has expired');
+        }
+
+        this.password = await PasswordHash.create(password);
+        this.passwordResetToken = null;
+        this.passwordResetExpiresAt = null;
     }
 
 }

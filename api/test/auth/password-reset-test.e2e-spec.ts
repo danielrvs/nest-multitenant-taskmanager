@@ -77,7 +77,7 @@ describe('Password Reset E2E Tests', () => {
             // Reset password
             const resetResponse = await request(app.getHttpServer())
                 .post('/auth/reset-password')
-                .send({ token, password: newPassword });
+                .send({ token, password: newPassword, email: user.email.toString() });
 
             expect([200, 201]).toContain(resetResponse.status);
 
