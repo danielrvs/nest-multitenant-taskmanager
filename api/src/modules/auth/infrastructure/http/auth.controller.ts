@@ -12,6 +12,9 @@ import { LogoutCommand } from "../../application/commands/logout.command";
 import { CustomThrottlerGuard } from "@/shared/infrastructure/guards/custom-throttler.guard";
 import { Public } from "@/shared/infrastructure/decorators/public.decorator";
 import { ConfigService } from "@nestjs/config";
+import { RegisterResDto } from "../../application/dtos/register.res.dto";
+import { RegisterReqDto } from "../../application/dtos/register.req.dto";
+import { RegisterCommand } from "../../application/commands/register.command";
 
 
 @Controller('auth')
@@ -88,6 +91,16 @@ export class AuthController {
 
         res.clearCookie(accessTokenName);
         res.clearCookie(refreshTokenName);
+    }
+
+    @Post('register')
+    @Public()
+    @HttpCode(HttpStatus.CREATED)
+    @ResponseMessage("User registered successfully")
+    async register(@Body() dto: RegisterReqDto): Promise<RegisterResDto> {
+        const command = new RegisterCommand(dto.name, dto.email, dto.password, dto.tenantId);
+        const result = await this.commandBus.execute<RegisterCommand, RegisterResDto>(command);
+        return result;
     }
 
 }

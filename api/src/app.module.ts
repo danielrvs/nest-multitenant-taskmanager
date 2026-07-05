@@ -13,6 +13,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { JwtAuthGuard } from './shared/infrastructure/guards/jwt-auth.guard';
 import { RedisCacheModule } from './shared/infrastructure/cache/redis-cache.module';
 import authConfig from './modules/auth/infrastructure/config/auth.config';
+import { QueueModule } from './shared/infrastructure/queue/queue.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import authConfig from './modules/auth/infrastructure/config/auth.config';
       ttl: 10000,
       limit: 5
     }]),
+    QueueModule,
     PrismaModule,
     RedisCacheModule,
     UserModule,

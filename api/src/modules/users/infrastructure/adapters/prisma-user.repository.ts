@@ -41,6 +41,18 @@ export class PrismaUserRepository extends PrismaBaseRepository implements UserRe
         })
     }
 
+    async findByEmailAndTenantId(email: string, tenantId: string): Promise<User | null> {
+        return this.handleDbOperation(async () => {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    email,
+                    tenantId
+                }
+            });
+            return user ? UserMapper.toDomain(user) : null;
+        })
+    }
+
     async findById(id: string): Promise<User | null> {
         return this.handleDbOperation(async () => {
             const user = await this.prisma.user.findUnique({

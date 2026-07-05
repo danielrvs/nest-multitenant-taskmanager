@@ -23,16 +23,21 @@ import { MfaBackupCodesRepositoryPort } from "./domain/ports/mfa-backup-codes.re
 import { PrismaMfaBackupCodesRepository } from "./infrastructure/adapters/prisma-mfa-backup-codes.repository.adapter";
 import { MfaActivateHandler } from "./application/handlers/mfa-activate.handler";
 import { MfaDeactivateHandler } from "./application/handlers/mfa-deactivate.handler";
+import { RegisterHandler } from "./application/handlers/register.handler";
+import { BullModule } from "@nestjs/bullmq";
 
 
 const commandHandlers = [
-    LoginHandler, LogoutHandler, MfaSetupHandler, MfaChallengeHandler, MfaActivateHandler, MfaDeactivateHandler
+    LoginHandler, LogoutHandler, MfaSetupHandler, MfaChallengeHandler, MfaActivateHandler, MfaDeactivateHandler, RegisterHandler
 ]
 const queriesHandlers = []
 
 @Module({
     imports: [
         CqrsModule,
+        BullModule.registerQueue({
+            name: 'auth-emails',
+        }),
         JwtModule.registerAsync({
             global: true,
             imports: [ConfigModule],

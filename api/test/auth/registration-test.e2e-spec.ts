@@ -7,10 +7,13 @@ import { cleanupDatabase } from "../helpers/clean-up-database.helper";
 import { setupTestApp } from "../helpers/setup-test.helper";
 import { PrismaService } from '@/shared/infrastructure/prisma/prisma.service';
 import { faker } from "@faker-js/faker";
+import { EventBus } from '@nestjs/cqrs';
+import { UserRegisteredEvent } from '@/modules/auth/domain/events/user-registered.event';
 
 describe('Registration Tests', () => {
     let app: INestApplication;
     let prisma: PrismaService;
+    let eventBus: EventBus;
 
     beforeAll(async () => {
         const moduleFixture = await Test.createTestingModule(
@@ -22,6 +25,7 @@ describe('Registration Tests', () => {
         app = moduleFixture.createNestApplication();
         setupTestApp(app);
         prisma = app.get(PrismaService);
+        eventBus = app.get(EventBus);
 
         TestFactories.init(app);
         await app.init();
@@ -29,6 +33,7 @@ describe('Registration Tests', () => {
 
     beforeEach(async () => {
         await cleanupDatabase(prisma);
+        jest.clearAllMocks();
     })
 
     afterAll(async () => {
@@ -40,40 +45,66 @@ describe('Registration Tests', () => {
         const route = () => '/auth/register';
 
         it('should successfully register a new user', async () => {
-            const password = 'test-password';
-            const email = faker.internet.email()
+            const tenant = await TestFactories.tenant().create();
+            const password = 'test-passworD123';
+            const email = faker.internet.email();
+            const name = faker.person.fullName();
+            const publishSpy = jest.spyOn(eventBus, 'publish');
+
             const response = await request(app.getHttpServer())
                 .post(route())
                 .send({
-                    name: faker.person.fullName(),
+                    name,
                     email,
                     password,
+                    tenantId: tenant.id
                 });
+
             expect(response.status).toBe(201);
-            expect(response.body.data.mfaRequired).toBe(false);
+            expect(response.body.data.email).toBe(email);
 
             const user = await prisma.user.findUnique({ where: { email } });
             expect(user).toBeDefined();
             expect(user?.email).toBe(email);
+
+            expect(publishSpy).toHaveBeenCalledTimes(1);
+            expect(publishSpy).toHaveBeenCalledWith(
+                expect.any(UserRegisteredEvent)
+            );
+            expect(publishSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    userId: user?.id,
+                    tenantId: tenant.id,
+                    email: email,
+                    name: name,
+                    role: 'VIEWER'
+                })
+            );
         });
 
-        it('should return 409 when email already exists', async () => {
-            const user = await TestFactories.user().create();
+        it('should return 409 when email already exists in tenant', async () => {
+            const tenant = await TestFactories.tenant().create();
+            const password = 'test-passworD123';
+            const user = await TestFactories.user().state({ tenantId: tenant.id }).create();
             const response = await request(app.getHttpServer())
                 .post(route())
                 .send({
                     name: faker.person.fullName(),
                     email: user.email.toString(),
-                    password: 'test-password',
+                    password,
+                    tenantId: tenant.id
                 });
             expect(response.status).toBe(409);
         });
 
         it('should return 400 when request malformed', async () => {
+            const tenant = await TestFactories.tenant().create();
+            const password = 'test-passworD123';
             const malformedRequests = [
-                { name: faker.person.fullName(), password: 'test-password' },
-                { name: faker.person.fullName(), email: faker.internet.email() },
-                { name: faker.person.fullName(), email: 'invalid-email', password: 'test-password' },
+                { name: faker.person.fullName(), password: 'weak-password' },
+                { name: faker.person.fullName(), email: faker.internet.email(), tenantId: tenant.id },
+                { name: faker.person.fullName(), email: 'invalid-email', password, tenantId: tenant.id },
+                { name: faker.person.fullName(), email: 'invalid-email', password, tenantId: '123' },
             ]
 
             for (const input of malformedRequests) {
@@ -85,6 +116,8 @@ describe('Registration Tests', () => {
         });
 
         it('should enforce rate limit and return 429 under stress', async () => {
+            const tenant = await TestFactories.tenant().create();
+            const password = 'test-passworD123';
             const promises = Array.from({ length: 6 }).map(() =>
                 request(app.getHttpServer())
                     .post(route())
@@ -92,7 +125,8 @@ describe('Registration Tests', () => {
                     .send({
                         name: faker.person.fullName(),
                         email: faker.internet.email(),
-                        password: 'test-password'
+                        password,
+                        tenantId: tenant.id
                     })
             );
 
