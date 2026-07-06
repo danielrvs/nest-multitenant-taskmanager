@@ -3,7 +3,7 @@ import { MfaActivateCommand } from "../commands/mfa-activate.command";
 import { MfaValidatorPort } from "../../domain/ports/mfa-validator.port";
 import { UserRepositoryPort } from "@/modules/users/domain/ports/user.repository.port";
 import { MfaBackupCodesRepositoryPort } from "../../domain/ports/mfa-backup-codes.repository.port";
-import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { MfaBackupCodes } from "../../domain/entities/mfa-backup-codes.entity";
 import { ConfigService } from "@nestjs/config";
 
@@ -31,8 +31,12 @@ export class MfaActivateHandler implements ICommandHandler<MfaActivateCommand> {
             throw new NotFoundException('User not found');
         }
 
+        if (userFound.isMFAEnabled()) {
+            throw new BadRequestException('MFA is already activated');
+        }
+
         if (!userFound.mfaSecret) {
-            throw new BadRequestException('MFA is not activated');
+            throw new InternalServerErrorException('MFA secret not found');
         }
 
         const isValid = await this.mfaValidator.validate(userFound.mfaSecret, totpCode);
