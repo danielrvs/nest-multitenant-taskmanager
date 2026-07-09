@@ -22,13 +22,13 @@ describe('Password Reset E2E Tests', () => {
         const moduleFixture = await Test.createTestingModule({
             imports: [AppModule]
         })
-        .overrideProvider(MailerPort)
-        .useValue({
-            sendWelcomeEmail: jest.fn(),
-            sendForgotPasswordEmail: jest.fn(),
-            sendResetPasswordEmail: jest.fn(),
-        })
-        .compile();
+            .overrideProvider(MailerPort)
+            .useValue({
+                sendWelcomeEmail: jest.fn(),
+                sendForgotPasswordEmail: jest.fn(),
+                sendResetPasswordEmail: jest.fn(),
+            })
+            .compile();
 
         app = moduleFixture.createNestApplication();
         setupTestApp(app);
@@ -67,7 +67,7 @@ describe('Password Reset E2E Tests', () => {
             expect(dbUser?.passwordResetToken).not.toBeNull();
             expect(typeof dbUser?.passwordResetToken).toBe('string');
 
-            // Assert domain event was published
+            expect(publishSpy).toHaveBeenCalledTimes(1);
             expect(publishSpy).toHaveBeenCalledWith(expect.any(ForgotPasswordEvent));
         });
 
@@ -96,24 +96,21 @@ describe('Password Reset E2E Tests', () => {
             const newPassword = 'NewPassword123!';
             const user = await TestFactories.user().state({ password }).withPasswordResetToken(token).create();
 
-            // Reset password
             const resetResponse = await request(app.getHttpServer())
                 .post('/auth/reset-password')
                 .send({ token, password: newPassword, email: user.email.toString() });
 
-            expect([200, 201]).toContain(resetResponse.status);
+            expect(resetResponse.status).toBe(200);
 
-            // Assert domain event was published
+            expect(publishSpy).toHaveBeenCalledTimes(1);
             expect(publishSpy).toHaveBeenCalledWith(expect.any(ResetPasswordEvent));
 
-            // Verify old password no longer works
             const oldLoginResponse = await request(app.getHttpServer())
                 .post('/auth/login')
                 .send({ email: user.email.toString(), password });
 
             expect(oldLoginResponse.status).toBe(401);
 
-            // Verify new password works
             const newLoginResponse = await request(app.getHttpServer())
                 .post('/auth/login')
                 .send({ email: user.email.toString(), password: newPassword });
@@ -138,7 +135,7 @@ describe('Password Reset E2E Tests', () => {
                 .post('/auth/reset-password')
                 .send({ token: 'expired-token-val', password: 'NewPassword123!' });
 
-            expect([400, 401, 404]).toContain(response.status);
+            expect(response.status).toBe(400);
         });
     });
 });

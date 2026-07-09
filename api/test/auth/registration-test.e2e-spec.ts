@@ -9,18 +9,27 @@ import { PrismaService } from '@/shared/infrastructure/prisma/prisma.service';
 import { faker } from "@faker-js/faker";
 import { EventBus } from '@nestjs/cqrs';
 import { UserRegisteredEvent } from '@/modules/auth/domain/events/user-registered.event';
+import { MailerPort } from '@/modules/auth/domain/ports/mailer.port';
 
 describe('Registration Tests', () => {
     let app: INestApplication;
     let prisma: PrismaService;
     let eventBus: EventBus;
+    let publishSpy: jest.SpyInstance;
 
     beforeAll(async () => {
         const moduleFixture = await Test.createTestingModule(
             {
                 imports: [AppModule]
             }
-        ).compile();
+        )
+            .overrideProvider(MailerPort)
+            .useValue({
+                sendWelcomeEmail: jest.fn(),
+                sendForgotPasswordEmail: jest.fn(),
+                sendResetPasswordEmail: jest.fn(),
+            })
+            .compile();
 
         app = moduleFixture.createNestApplication();
         setupTestApp(app);
@@ -33,7 +42,11 @@ describe('Registration Tests', () => {
 
     beforeEach(async () => {
         await cleanupDatabase(prisma);
-        jest.clearAllMocks();
+        publishSpy = jest.spyOn(eventBus, 'publish');
+    })
+
+    afterEach(() => {
+        publishSpy.mockRestore();
     })
 
     afterAll(async () => {
@@ -49,7 +62,6 @@ describe('Registration Tests', () => {
             const password = 'test-passworD123';
             const email = faker.internet.email();
             const name = faker.person.fullName();
-            const publishSpy = jest.spyOn(eventBus, 'publish');
 
             const response = await request(app.getHttpServer())
                 .post(route())
