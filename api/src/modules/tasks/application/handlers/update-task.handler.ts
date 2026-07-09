@@ -3,6 +3,7 @@ import { UpdateTaskCommand } from "../commands/update-task.command";
 import { TaskRepositoryPort } from "../../domain/ports/task.repository.port";
 import { NotFoundException } from "@nestjs/common";
 import { UpdateTaskResDTO } from "../dtos/update-task.res.dto";
+import { TaskPolicy } from "../../domain/policies/task.policy";
 
 @CommandHandler(UpdateTaskCommand)
 export class UpdateTaskHandler implements ICommandHandler<UpdateTaskCommand, UpdateTaskResDTO> {
@@ -15,6 +16,8 @@ export class UpdateTaskHandler implements ICommandHandler<UpdateTaskCommand, Upd
         if (!task) {
             throw new NotFoundException('Task not found');
         }
+
+        TaskPolicy.isUserAuthorizedToUpdate(command.currentUser, task);
 
         //NOTE: to avoid over enginering I created a unique update method
         //instead of creating a method for each field (like updateTitle, updateDescription, etc).

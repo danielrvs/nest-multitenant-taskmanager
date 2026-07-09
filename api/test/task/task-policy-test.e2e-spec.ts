@@ -80,4 +80,79 @@ describe('Task Policy Test', () => {
         const found = await prisma.task.findUnique({ where: { id: task.id } });
         expect(found?.title).toBe(task.title);
     })
+
+    it('should not let a manager update another user task', async () => {
+        const tenant = await TestFactories.tenant().create();
+        const manager = await TestFactories.user().state({ role: UserRole.MANAGER, tenantId: tenant.id }).createAuthenticatedUser();
+        const anotherUser = await TestFactories.user().state({ tenantId: tenant.id }).create();
+        const task = await TestFactories.task().state({ tenantId: tenant.id, userId: anotherUser.id }).create();
+
+        await request(app.getHttpServer())
+            .put(route(task.id))
+            .send({ title: 'updated' })
+            .set('Cookie', `access_token=${manager.auth.accessToken}`)
+            .expect(403)
+
+        const found = await prisma.task.findUnique({ where: { id: task.id } });
+        expect(found?.title).toBe(task.title);
+    })
+
+    it('should let an admin update anybody tasks', async () => {
+        const tenant = await TestFactories.tenant().create();
+        const admin = await TestFactories.user().state({ role: UserRole.ADMIN, tenantId: tenant.id }).createAuthenticatedUser();
+        const user = await TestFactories.user().state({ tenantId: tenant.id }).create();
+        const task = await TestFactories.task().state({ tenantId: tenant.id, userId: user.id }).create();
+
+        await request(app.getHttpServer())
+            .put(route(task.id))
+            .send({ title: 'updated' })
+            .set('Cookie', `access_token=${admin.auth.accessToken}`)
+            .expect(204)
+
+        const found = await prisma.task.findUnique({ where: { id: task.id } });
+        expect(found?.title).toBe('updated');
+    })
+
+    it('should let a manager delete its own tasks', async () => {
+        const tenant = await TestFactories.tenant().create();
+        const manager = await TestFactories.user().state({ role: UserRole.MANAGER, tenantId: tenant.id }).createAuthenticatedUser();
+        const task = await TestFactories.task().state({ tenantId: tenant.id, userId: manager.user.id }).create();
+
+        await request(app.getHttpServer())
+            .delete(route(task.id))
+            .set('Cookie', `access_token=${manager.auth.accessToken}`)
+            .expect(204)
+
+        const found = await prisma.task.findUnique({ where: { id: task.id } });
+        expect(found).toBeNull();
+    })
+
+    it('should not let a manager delete another user tasks', async () => {
+        const tenant = await TestFactories.tenant().create();
+        const manager = await TestFactories.user().state({ role: UserRole.MANAGER, tenantId: tenant.id }).createAuthenticatedUser();
+        const anotherUser = await TestFactories.user().state({ tenantId: tenant.id }).create();
+        const task = await TestFactories.task().state({ tenantId: tenant.id, userId: anotherUser.id }).create();
+
+        await request(app.getHttpServer())
+            .delete(route(task.id))
+            .set('Cookie', `access_token=${manager.auth.accessToken}`)
+            .expect(403)
+
+        const found = await prisma.task.findUnique({ where: { id: task.id } });
+        expect(found).toBeDefined();
+    })
+
+    it('should not let a viewer delete tasks', async () => {
+        const tenant = await TestFactories.tenant().create();
+        const viewer = await TestFactories.user().state({ role: UserRole.VIEWER, tenantId: tenant.id }).createAuthenticatedUser();
+        const task = await TestFactories.task().state({ tenantId: tenant.id }).create();
+
+        await request(app.getHttpServer())
+            .delete(route(task.id))
+            .set('Cookie', `access_token=${viewer.auth.accessToken}`)
+            .expect(403)
+
+        const found = await prisma.task.findUnique({ where: { id: task.id } });
+        expect(found).toBeDefined();
+    })
 })
