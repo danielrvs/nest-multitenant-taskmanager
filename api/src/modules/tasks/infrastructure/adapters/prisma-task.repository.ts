@@ -3,6 +3,7 @@ import { TaskRepositoryPort } from "../../domain/ports/task.repository.port";
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@/shared/infrastructure/prisma/prisma.service";
 import { Task } from "../../domain/entities/task.entity";
+import { TaskMapper } from "../mappers/task.mapper";
 
 @Injectable()
 export class PrismaTaskRepository extends PrismaBaseRepository implements TaskRepositoryPort {
@@ -12,36 +13,61 @@ export class PrismaTaskRepository extends PrismaBaseRepository implements TaskRe
         super();
     }
 
-    create(entity: Task): Promise<Task> {
-        throw new Error("Method not implemented.");
+    async create(entity: Task): Promise<Task> {
+        return await this.handleDbOperation(async () => {
+            const res = await this.prisma.task.create({ data: TaskMapper.toCreateInput(entity) });
+            return TaskMapper.toDomain(res);
+        })
+
     }
 
-    createMany(entities: Task[]): Promise<{ count: number }> {
-        throw new Error("Method not implemented.");
+    async createMany(entities: Task[]): Promise<{ count: number }> {
+        return await this.handleDbOperation(async () => {
+            const res = await this.prisma.task.createMany({ data: entities.map(TaskMapper.toCreateManyInput) });
+            return res;
+        })
     }
 
-    findById(id: string): Promise<Task | null> {
-        throw new Error("Method not implemented.");
+    async findById(id: string): Promise<Task | null> {
+        return await this.handleDbOperation(async () => {
+            const res = await this.prisma.task.findUnique({ where: { id } });
+            if (!res) return null;
+            return TaskMapper.toDomain(res);
+        })
     }
 
-    findByUserId(userId: string): Promise<Task[]> {
-        throw new Error("Method not implemented.");
+    async findByUserId(userId: string): Promise<Task[]> {
+        return await this.handleDbOperation(async () => {
+            const res = await this.prisma.task.findMany({ where: { userId } });
+            return res.map(TaskMapper.toDomain);
+        })
     }
 
-    findByTenantId(tenantId: string): Promise<Task[]> {
-        throw new Error("Method not implemented.");
+    async findByTenantId(tenantId: string): Promise<Task[]> {
+        return await this.handleDbOperation(async () => {
+            const res = await this.prisma.task.findMany({ where: { tenantId } });
+            return res.map(TaskMapper.toDomain);
+        })
     }
 
-    findByAssignedTo(assignedToId: string): Promise<Task[]> {
-        throw new Error("Method not implemented.");
+    async findByAssignedTo(assignedToId: string): Promise<Task[]> {
+        return await this.handleDbOperation(async () => {
+            const res = await this.prisma.task.findMany({ where: { assignedTo: assignedToId } });
+            return res.map(TaskMapper.toDomain);
+        })
     }
 
-    update(id: string, data: Partial<Task>): Promise<Task> {
-        throw new Error("Method not implemented.");
+    async update(id: string, data: Partial<Task>): Promise<Task> {
+        return await this.handleDbOperation(async () => {
+            const res = await this.prisma.task.update({ where: { id }, data: TaskMapper.toUpdateInput(data) });
+            return TaskMapper.toDomain(res);
+        })
     }
 
-    delete(id: string): Promise<void> {
-        throw new Error("Method not implemented.");
+    async delete(id: string): Promise<void> {
+        return await this.handleDbOperation(async () => {
+            await this.prisma.task.delete({ where: { id } });
+        })
     }
 
 

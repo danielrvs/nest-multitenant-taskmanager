@@ -59,6 +59,22 @@ export class TaskMapper {
         };
     }
 
+    static toCreateManyInput(entity: Task): Prisma.TaskCreateManyInput {
+        return {
+            id: entity.id,
+            tenantId: entity.tenantId,
+            userId: entity.userId,
+            title: entity.title,
+            description: entity.description,
+            status: entity.status as unknown as PrismaTaskStatus,
+            priority: entity.priority as unknown as PrismaTaskPriority,
+            dueDate: entity.dueDate,
+            assignedTo: entity.assignedTo,
+            createdAt: entity.createdAt,
+            updatedAt: entity.updatedAt
+        };
+    }
+
     static toUpdateInput(data: Partial<Task>): Prisma.TaskUpdateInput {
         return {
             title: data.title,
