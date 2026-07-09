@@ -83,7 +83,6 @@ describe('MFA Challenge & Activation Integration Tests', () => {
             const totpCode = await generate({ secret: mfaSecret });
 
             const { user, auth } = await TestFactories.user()
-                .with2FA()
                 .state({ mfaSecret })
                 .createAuthenticatedUser();
 
@@ -93,7 +92,7 @@ describe('MFA Challenge & Activation Integration Tests', () => {
                 .post(route())
                 .set('Cookie', `access_token=${auth.accessToken}`)
                 .send({ totpCode })
-                .expect(200);
+            expect(response.status).toBe(200);
 
             expect(response.body.data.backupCodes).toBeInstanceOf(Array);
             expect(response.body.data.backupCodes).toHaveLength(8);
