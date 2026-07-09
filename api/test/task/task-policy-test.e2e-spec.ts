@@ -33,7 +33,7 @@ describe('Task Policy Test', () => {
         await app.close();
     })
 
-    const route = (id: string) => (`tasks/${id}`)
+    const route = (id: string) => (`/tasks/${id}`)
 
     it('should let a admin delete anybody tasks', async () => {
         const tenant = await TestFactories.tenant().create();

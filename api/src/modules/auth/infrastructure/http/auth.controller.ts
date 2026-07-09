@@ -26,7 +26,6 @@ import { ForgotPasswordReqDto } from "../../application/dtos/forgot-password.req
 export class AuthController {
     constructor(
         private readonly commandBus: CommandBus,
-        private readonly queryBus: QueryBus,
         private readonly configService: ConfigService
     ) { }
 
