@@ -53,7 +53,7 @@ export class TaskMapper {
             status: entity.status as unknown as PrismaTaskStatus,
             priority: entity.priority as unknown as PrismaTaskPriority,
             dueDate: entity.dueDate,
-            assignee: { connect: { id: entity.assignedTo } },
+            assignee: entity.assignedTo ? { connect: { id: entity.assignedTo } } : undefined,
             createdAt: entity.createdAt,
             updatedAt: entity.updatedAt
         };
