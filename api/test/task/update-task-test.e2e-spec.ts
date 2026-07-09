@@ -3,12 +3,12 @@ import { INestApplication } from "@nestjs/common"
 import { cleanupDatabase } from "../helpers/clean-up-database.helper";
 import { AppModule } from "@/app.module";
 import { Test } from "@nestjs/testing";
-import { setupTestApp } from "test/helpers/setup-test.helper";
-import { TestFactories } from "test/factories/test-factories";
+import { setupTestApp } from "../helpers/setup-test.helper";
+import { TestFactories } from "../factories/test-factories";
 import { UserRole } from "@/modules/users/domain/entities/enums/user-role.enum";
 import request from 'supertest';
 
-describe('Task Update Test', async () => {
+describe('Task Update Test', () => {
     let app: INestApplication;
     let prisma: PrismaService;
 
